@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+website/node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+website/.next/
+out/
+*.tsbuildinfo
+
+# Dart/Flutter
+build/
+.dart_tool/
+.packages
+*.lock
+
+# Environment variables
+.env*.local
+.env*.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/
+
+# Mobile
+.gradle/
+.android/
+ios/Pods/
+
+# Build outputs
+dist/
+coverage/
