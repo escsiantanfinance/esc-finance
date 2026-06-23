@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{width:1200px;height:660px;background:#eef2f7;font-family:'Segoe UI',Arial,sans-serif;color:#1f2937;padding:24px}
+  .app{width:1152px;min-height:612px;background:#fff;border-radius:16px;overflow:hidden;display:flex;box-shadow:0 8px 28px rgba(30,64,175,.12)}
+  .side{width:210px;background:#0f172a;color:#cbd5e1;padding:20px 14px;flex-shrink:0}
+  .brand{color:#fff;font-weight:700;font-size:15px}.brand small{display:block;color:#64748b;font-size:11px;font-weight:400;margin-top:2px}
+  .nav{margin-top:22px}
+  .it{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;font-size:13px;margin-bottom:3px;color:#94a3b8}
+  .it.on{background:#1E40AF;color:#fff;font-weight:600}.it .i{width:17px;text-align:center}
+  .main{flex:1;padding:22px 26px}
+  .h1{font-size:20px;font-weight:700;color:#0f172a}.sub{color:#6b7280;font-size:12px}
+  .bar{display:flex;align-items:center;margin-bottom:16px}
+  .badge{display:inline-block;padding:5px 12px;border-radius:12px;font-size:11px;font-weight:600;background:#dbeafe;color:#1e40af}
+  .hero{background:#1E40AF;border-radius:12px;padding:15px 18px;margin-bottom:16px;color:#fff}
+  .hero .l{font-size:12px;color:#bfdbfe}.hero .v{font-size:22px;font-weight:700;margin-top:4px}
+  .panel{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:6px 18px 10px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;color:#6b7280;font-weight:600;padding:10px 6px;border-bottom:2px solid #e5e7eb;font-size:11px}
+  td{padding:11px 6px;border-bottom:1px solid #f1f5f9}
+  .right{text-align:right}
+  .pbar{height:8px;background:#eef2f7;border-radius:5px;overflow:hidden;margin-top:2px}
+  .pbar i{display:block;height:100%;border-radius:5px}
+  .pct{font-size:10px;margin-top:3px;color:#6b7280}
+</style></head><body>
+  <div class="app">
+    <div class="side">
+      <div class="brand">ESC Siantan<small>Admin keuangan</small></div>
+      <div class="nav">
+        <div class="it"><span class="i">🏠</span>Dashboard</div>
+        <div class="it"><span class="i">💵</span>Sesi ibadah</div>
+        <div class="it"><span class="i">📒</span>Jurnal umum</div>
+        <div class="it"><span class="i">💳</span>Akun &amp; kas</div>
+        <div class="it"><span class="i">🧾</span>Pengeluaran</div>
+        <div class="it on"><span class="i">📅</span>Anggaran</div>
+        <div class="it"><span class="i">📊</span>Laporan</div>
+        <div class="it"><span class="i">🗄️</span>Backup</div>
+      </div>
+      <div style="margin-top:26px;border-top:1px solid #1e293b;padding-top:12px"><div class="it"><span class="i">🚪</span>Keluar</div></div>
+    </div>
+    <div class="main">
+      <div class="bar"><div><div class="h1">Anggaran</div><div class="sub" style="margin-bottom:0">Pagu anggaran vs realisasi per divisi</div></div><span class="badge" style="margin-left:auto">Tahun 2026</span></div>
+      <div class="hero"><div class="l">Total anggaran tahunan</div><div class="v">Rp 240.000.000</div></div>
+      <div class="panel">
+        <table>
+          <tr><th style="width:24%">Pos anggaran</th><th class="right">Anggaran</th><th class="right">Realisasi</th><th class="right">Sisa</th><th style="width:26%">Progres</th></tr>
+          <tr><td>Operasional</td><td class="right">60.000.000</td><td class="right">42.000.000</td><td class="right">18.000.000</td><td><div class="pbar"><i style="width:70%;background:#1E40AF"></i></div><div class="pct">70% terpakai</div></td></tr>
+          <tr><td>Pelayanan</td><td class="right">48.000.000</td><td class="right">31.200.000</td><td class="right">16.800.000</td><td><div class="pbar"><i style="width:65%;background:#1E40AF"></i></div><div class="pct">65% terpakai</div></td></tr>
+          <tr><td>Diakonia</td><td class="right">36.000.000</td><td class="right">38.500.000</td><td class="right" style="color:#DC2626">-2.500.000</td><td><div class="pbar"><i style="width:100%;background:#DC2626"></i></div><div class="pct" style="color:#DC2626">107% — melebihi pagu!</div></td></tr>
+          <tr><td>Misi &amp; Penginjilan</td><td class="right">30.000.000</td><td class="right">12.000.000</td><td class="right">18.000.000</td><td><div class="pbar"><i style="width:40%;background:#059669"></i></div><div class="pct">40% terpakai</div></td></tr>
+          <tr><td>Renovasi</td><td class="right">66.000.000</td><td class="right">21.500.000</td><td class="right">44.500.000</td><td><div class="pbar"><i style="width:33%;background:#059669"></i></div><div class="pct">33% terpakai</div></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</body></html>

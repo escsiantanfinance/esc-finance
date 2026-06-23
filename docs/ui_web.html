@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{width:1200px;height:660px;background:#eef2f7;font-family:'Segoe UI',Arial,sans-serif;color:#1f2937;padding:24px;}
+  .app{width:1152px;height:612px;background:#fff;border-radius:16px;overflow:hidden;display:flex;box-shadow:0 8px 28px rgba(30,64,175,.12);}
+  .side{width:210px;background:#0f172a;color:#cbd5e1;padding:20px 14px;flex-shrink:0;}
+  .brand{color:#fff;font-weight:700;font-size:15px;}
+  .brand small{display:block;color:#64748b;font-size:11px;font-weight:400;margin-top:2px;}
+  .nav{margin-top:22px;}
+  .nav .it{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;font-size:13px;margin-bottom:3px;color:#94a3b8;}
+  .nav .it.on{background:#1E40AF;color:#fff;font-weight:600;}
+  .nav .it .i{width:17px;text-align:center;}
+  .main{flex:1;padding:22px 26px;overflow:hidden;}
+  .h1{font-size:20px;font-weight:700;color:#0f172a;}
+  .sub{color:#6b7280;font-size:12px;margin-bottom:18px;}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px;}
+  .m{background:#f8fafc;border:1px solid #eef2f7;border-radius:11px;padding:13px 15px;}
+  .m .l{font-size:11px;color:#6b7280;}
+  .m .v{font-size:18px;font-weight:700;margin-top:5px;}
+  .panel{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;}
+  .panel h3{font-size:13px;font-weight:700;margin-bottom:12px;color:#0f172a;}
+  .cols{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+  .bars{display:flex;align-items:flex-end;gap:13px;height:150px;}
+  .bars .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
+  .bars .bar{width:100%;background:#93c5fd;border-radius:5px 5px 0 0;}
+  .bars .bar.hl{background:#1E40AF;}
+  .bars .cap{font-size:10px;color:#94a3b8;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{text-align:left;color:#6b7280;font-weight:600;padding:7px 4px;border-bottom:1px solid #e5e7eb;font-size:11px;}
+  td{padding:8px 4px;border-bottom:1px solid #f1f5f9;}
+  .up{color:#059669;font-weight:600;}.down{color:#DC2626;font-weight:600;}
+</style></head><body>
+  <div class="app">
+    <div class="side">
+      <div class="brand">ESC Siantan<small>Admin keuangan</small></div>
+      <div class="nav">
+        <div class="it on"><span class="i">🏠</span>Dashboard</div>
+        <div class="it"><span class="i">💵</span>Sesi ibadah</div>
+        <div class="it"><span class="i">📒</span>Jurnal umum</div>
+        <div class="it"><span class="i">💳</span>Akun &amp; kas</div>
+        <div class="it"><span class="i">🧾</span>Pengeluaran</div>
+        <div class="it"><span class="i">📅</span>Anggaran</div>
+        <div class="it"><span class="i">📊</span>Laporan</div>
+        <div class="it"><span class="i">🗄️</span>Backup</div>
+      </div>
+      <div style="margin-top:26px;border-top:1px solid #1e293b;padding-top:12px;">
+        <div class="it"><span class="i">🚪</span>Keluar</div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="h1">Dashboard</div>
+      <div class="sub">Ringkasan keuangan gereja — Juni 2026</div>
+      <div class="metrics">
+        <div class="m"><div class="l">Total saldo kas</div><div class="v">Rp 128.450.000</div></div>
+        <div class="m"><div class="l">Pemasukan bulan ini</div><div class="v" style="color:#059669;">Rp 42.300.000</div></div>
+        <div class="m"><div class="l">Pengeluaran bulan ini</div><div class="v" style="color:#DC2626;">Rp 18.750.000</div></div>
+        <div class="m"><div class="l">Pengeluaran pending</div><div class="v">3</div></div>
+      </div>
+      <div class="cols">
+        <div class="panel">
+          <h3>Persembahan 6 bulan terakhir</h3>
+          <div class="bars">
+            <div class="b"><div class="bar" style="height:42%;"></div><div class="cap">Jan</div></div>
+            <div class="b"><div class="bar" style="height:56%;"></div><div class="cap">Feb</div></div>
+            <div class="b"><div class="bar" style="height:48%;"></div><div class="cap">Mar</div></div>
+            <div class="b"><div class="bar" style="height:72%;"></div><div class="cap">Apr</div></div>
+            <div class="b"><div class="bar" style="height:60%;"></div><div class="cap">Mei</div></div>
+            <div class="b"><div class="bar hl" style="height:88%;"></div><div class="cap">Jun</div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Transaksi terbaru</h3>
+          <table>
+            <tr><th>Tanggal</th><th>Keterangan</th><th style="text-align:right;">Jumlah</th></tr>
+            <tr><td>21 Jun</td><td>Persembahan Ibadah Raya</td><td style="text-align:right;" class="up">+8.200.000</td></tr>
+            <tr><td>20 Jun</td><td>Pembelian ATK</td><td style="text-align:right;" class="down">-450.000</td></tr>
+            <tr><td>18 Jun</td><td>Persemb. Sek. Minggu</td><td style="text-align:right;" class="up">+1.150.000</td></tr>
+            <tr><td>15 Jun</td><td>Bayar listrik</td><td style="text-align:right;" class="down">-1.850.000</td></tr>
+            <tr><td>12 Jun</td><td>Persembahan Pemuda</td><td style="text-align:right;" class="up">+2.300.000</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Fitur & Fungsi — Sistem Akuntansi & Bendahara Gereja</title>
+<style>
+  :root{
+    --primary:#1E40AF; --primary-light:#3B82F6; --gold:#D97706;
+    --green:#059669; --red:#DC2626; --ink:#1f2937; --muted:#6b7280;
+    --line:#e5e7eb; --soft:#f8fafc; --softer:#f1f5f9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{font-family:'Segoe UI',Arial,sans-serif;color:var(--ink);font-size:11pt;line-height:1.6;}
+  @page{size:A4;margin:0;}
+
+  .page{padding:18mm 16mm;page-break-after:always;break-after:page;}
+  .page:last-child{page-break-after:auto;break-after:auto;}
+  .page-cover{padding:0;}
+  h1,h2,h3{color:var(--primary);font-weight:700;line-height:1.25;}
+  h2{font-size:17pt;margin-bottom:10px;padding-bottom:7px;border-bottom:3px solid var(--primary);}
+  h3{font-size:12.5pt;color:var(--ink);margin:16px 0 6px;}
+  p{margin-bottom:8px;}
+  ul{margin:6px 0 10px 20px;}
+  li{margin-bottom:4px;}
+  .muted{color:var(--muted);}
+  .small{font-size:9.5pt;}
+
+  /* COVER */
+  .cover{min-height:297mm;display:flex;flex-direction:column;justify-content:center;
+         text-align:center;background:var(--primary);color:#fff;padding:60mm 24mm;}
+  .cover .logo{width:90px;height:90px;border-radius:24px;background:rgba(255,255,255,.15);
+         display:flex;align-items:center;justify-content:center;font-size:46px;margin:0 auto 26px;border:2px solid rgba(255,255,255,.4);}
+  .cover h1{color:#fff;font-size:30pt;line-height:1.2;margin-bottom:14px;}
+  .cover .sub{font-size:14pt;color:#dbeafe;margin-bottom:40px;}
+  .cover .tag{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);
+         padding:8px 20px;border-radius:30px;font-size:11pt;color:#fff;margin-bottom:50px;}
+  .cover .meta{font-size:10pt;color:#bfdbfe;line-height:1.9;border-top:1px solid rgba(255,255,255,.25);padding-top:22px;max-width:340px;margin:0 auto;}
+
+  /* GENERIC */
+  .lead{font-size:11.5pt;color:#374151;background:var(--soft);border-left:4px solid var(--primary-light);
+        padding:14px 16px;border-radius:0 8px 8px 0;margin-bottom:18px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff;}
+  .card .ico{font-size:20px;margin-bottom:6px;display:block;}
+  .card h4{font-size:11.5pt;color:var(--primary);margin-bottom:5px;}
+  .card p{font-size:10pt;color:#4b5563;margin:0;}
+
+  table{width:100%;border-collapse:collapse;font-size:10pt;margin:8px 0 14px;}
+  th{background:var(--primary);color:#fff;text-align:left;padding:8px 10px;font-weight:600;}
+  td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tr:nth-child(even) td{background:var(--soft);}
+  .chk{color:var(--green);font-weight:700;}
+
+  .pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:8.5pt;font-weight:600;}
+  .pill-blue{background:#dbeafe;color:#1e40af;}
+  .pill-green{background:#d1fae5;color:#065f46;}
+  .pill-gold{background:#fef3c7;color:#92400e;}
+  .pill-red{background:#fee2e2;color:#991b1b;}
+
+  .flow{display:flex;align-items:stretch;gap:8px;margin:14px 0;}
+  .flow .step{flex:1;border:1px solid var(--line);border-radius:9px;padding:11px 9px;text-align:center;background:var(--soft);}
+  .flow .step .n{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:10pt;font-weight:700;
+        display:flex;align-items:center;justify-content:center;margin:0 auto 6px;}
+  .flow .step .t{font-size:8.7pt;font-weight:600;color:var(--ink);line-height:1.3;}
+  .arr{display:flex;align-items:center;color:var(--primary-light);font-size:16px;font-weight:700;}
+
+  .secthead{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .secthead .num{background:var(--primary);color:#fff;width:30px;height:30px;border-radius:8px;
+        display:flex;align-items:center;justify-content:center;font-size:13pt;font-weight:700;flex-shrink:0;}
+  .toc-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:11.5pt;}
+  .toc-item .tn{color:var(--primary);font-weight:700;width:34px;}
+  .toc-item .td{flex:1;}
+  .toc-item .tp{color:var(--muted);font-size:10pt;}
+
+  .note{background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:11px 14px;font-size:10pt;color:#78350f;margin:10px 0;}
+  .ok{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:11px 14px;font-size:10pt;color:#065f46;margin:10px 0;}
+</style>
+</head>
+<body>
+
+<!-- ===================== COVER ===================== -->
+<div class="page page-cover">
+  <div class="cover">
+    <div class="logo">⛪</div>
+    <h1>Sistem Akuntansi &amp;<br>Bendahara Gereja</h1>
+    <div class="sub">Dokumen Fitur &amp; Fungsi Aplikasi</div>
+    <div class="tag">ESC Siantan Finance &nbsp;•&nbsp; Versi 2.0</div>
+    <div class="meta">
+      Platform terintegrasi: Aplikasi Mobile (Tim Finance) &amp; Web Dashboard (Admin)<br>
+      Disusun untuk: Calon Pengguna / Pembeli<br>
+      Tanggal: 23 Juni 2026
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DAFTAR ISI ===================== -->
+<div class="page">
+  <h2>Daftar Isi</h2>
+  <div class="toc-item"><span class="tn">1</span><span class="td">Ringkasan &amp; Manfaat Utama</span><span class="tp">hal. 3</span></div>
+  <div class="toc-item"><span class="tn">2</span><span class="td">Arsitektur Sistem</span><span class="tp">hal. 4</span></div>
+  <div class="toc-item"><span class="tn">3</span><span class="td">Alur Kerja Rekonsiliasi Kas Pasca-Ibadah</span><span class="tp">hal. 5</span></div>
+  <div class="toc-item"><span class="tn">4</span><span class="td">Fitur Aplikasi Mobile (Tim Finance)</span><span class="tp">hal. 6</span></div>
+  <div class="toc-item"><span class="tn">5</span><span class="td">Fitur Web Dashboard (Admin &amp; Akuntansi)</span><span class="tp">hal. 7</span></div>
+  <div class="toc-item"><span class="tn">6</span><span class="td">Modul Laporan Keuangan</span><span class="tp">hal. 8</span></div>
+  <div class="toc-item"><span class="tn">7</span><span class="td">Modul Pencadangan &amp; Pemulihan Data</span><span class="tp">hal. 9</span></div>
+  <div class="toc-item"><span class="tn">8</span><span class="td">Role &amp; Hak Akses Pengguna</span><span class="tp">hal. 10</span></div>
+  <div class="toc-item"><span class="tn">9</span><span class="td">Keamanan &amp; Teknologi</span><span class="tp">hal. 10</span></div>
+  <div class="toc-item"><span class="tn">10</span><span class="td">Ringkasan Matriks Fitur</span><span class="tp">hal. 11</span></div>
+</div>
+
+<!-- ===================== 1. RINGKASAN ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">1</span><h2 style="border:none;margin:0;padding:0;">Ringkasan &amp; Manfaat Utama</h2></div>
+  <div class="lead">
+    Sistem Akuntansi &amp; Bendahara Gereja adalah platform digital yang memodernisasi pencatatan keuangan
+    pasca-ibadah — menggantikan formulir kertas dan input manual ke spreadsheet yang rawan salah ketik,
+    kehilangan data, dan keterlambatan laporan.
+  </div>
+
+  <h3>Masalah yang Diselesaikan</h3>
+  <table>
+    <tr><th style="width:50%;">Cara Lama (Manual)</th><th>Dengan Sistem Ini</th></tr>
+    <tr><td>Hitung uang manual, rawan salah hitung</td><td>Kalkulator denominasi otomatis</td></tr>
+    <tr><td>Pindah data ke Excel satu per satu</td><td>Data tersinkron otomatis ke pusat</td></tr>
+    <tr><td>Formulir kertas mudah hilang/rusak</td><td>Tersimpan aman di cloud + dicadangkan harian</td></tr>
+    <tr><td>Laporan keuangan disusun manual berhari-hari</td><td>3 laporan standar otomatis &amp; real-time</td></tr>
+    <tr><td>Tidak ada bukti otorisasi yang sah</td><td>Tanda tangan digital Gembala &amp; Saksi</td></tr>
+  </table>
+
+  <h3>Manfaat Utama</h3>
+  <div class="grid2">
+    <div class="card"><span class="ico">🎯</span><h4>Akurasi Tinggi</h4><p>Sistem mencocokkan total fisik uang dengan input kategori secara otomatis (indikator MATCH / MISMATCH).</p></div>
+    <div class="card"><span class="ico">⚡</span><h4>Cepat &amp; Real-time</h4><p>Data dari ruang penghitungan langsung terkirim ke dashboard admin tanpa input ulang.</p></div>
+    <div class="card"><span class="ico">🔒</span><h4>Aman &amp; Terkunci</h4><p>Data yang sudah ditandatangani otomatis terkunci dan tidak bisa diubah, mencegah manipulasi.</p></div>
+    <div class="card"><span class="ico">📊</span><h4>Akuntansi Standar</h4><p>Mengikuti kaidah akuntansi nirlaba: Bagan Akun, Jurnal Umum, dan 3 laporan keuangan resmi.</p></div>
+  </div>
+</div>
+
+<!-- ===================== 2. ARSITEKTUR ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">2</span><h2 style="border:none;margin:0;padding:0;">Arsitektur Sistem</h2></div>
+  <p class="muted">Sistem terdiri dari dua aplikasi yang terhubung ke satu pusat data (cloud) yang sama.</p>
+
+  <div class="flow" style="margin:22px 0;">
+    <div class="step" style="padding:18px 12px;">
+      <div style="font-size:30px;margin-bottom:8px;">📱</div>
+      <div class="t" style="font-size:11pt;color:var(--primary);">Aplikasi Mobile</div>
+      <p class="small muted" style="margin-top:6px;">Tim Finance di ruang penghitungan uang. Input cepat, kalkulator, tanda tangan digital.</p>
+    </div>
+    <div class="arr">⟷</div>
+    <div class="step" style="padding:18px 12px;background:var(--primary);">
+      <div style="font-size:30px;margin-bottom:8px;">☁️</div>
+      <div class="t" style="font-size:11pt;color:#fff;">Pusat Data Cloud</div>
+      <p class="small" style="margin-top:6px;color:#dbeafe;">Database aman (Supabase / PostgreSQL). Menyimpan, menghitung, &amp; mencadangkan otomatis.</p>
+    </div>
+    <div class="arr">⟷</div>
+    <div class="step" style="padding:18px 12px;">
+      <div style="font-size:30px;margin-bottom:8px;">💻</div>
+      <div class="t" style="font-size:11pt;color:var(--primary);">Web Dashboard</div>
+      <p class="small muted" style="margin-top:6px;">Bendahara &amp; Gembala. Otorisasi, akuntansi, laporan, &amp; pencadangan data.</p>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:18px;">
+    <div class="card">
+      <h4>📱 Aplikasi Mobile</h4>
+      <p>Dioptimalkan untuk kecepatan &amp; akurasi entri data langsung di lapangan. Tetap menyimpan data sementara di perangkat agar tidak hilang walau aplikasi tertutup.</p>
+      <p class="small muted" style="margin-top:6px;"><b>Teknologi:</b> Flutter (Android &amp; iOS)</p>
+    </div>
+    <div class="card">
+      <h4>💻 Web Dashboard Admin</h4>
+      <p>Diakses dari mana saja lewat browser. Kendali penuh atas akuntansi, multi-kas, pengeluaran, laporan, dan pencadangan.</p>
+      <p class="small muted" style="margin-top:6px;"><b>Teknologi:</b> Next.js (Web responsif)</p>
+    </div>
+  </div>
+
+  <div class="ok"><b>Keunggulan arsitektur cloud:</b> mampu melayani ratusan pengguna relawan tanpa biaya lisensi per-pengguna, dengan keamanan berlapis dan sinkronisasi real-time.</div>
+</div>
+
+<!-- ===================== 3. ALUR KERJA ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">3</span><h2 style="border:none;margin:0;padding:0;">Alur Kerja Rekonsiliasi Kas Pasca-Ibadah</h2></div>
+  <p class="muted">Lima langkah baku yang dijalankan Tim Finance setiap selesai ibadah, dari membuka sesi hingga data terkunci.</p>
+
+  <div style="margin:18px 0;">
+    <div class="flow">
+      <div class="step"><div class="n">1</div><div class="t">Buka Sesi Ibadah</div></div>
+      <div class="arr">→</div>
+      <div class="step"><div class="n">2</div><div class="t">Input Denominasi &amp; Kategori</div></div>
+      <div class="arr">→</div>
+      <div class="step"><div class="n">3</div><div class="t">Balancing Otomatis</div></div>
+      <div class="arr">→</div>
+      <div class="step"><div class="n">4</div><div class="t">Tanda Tangan Digital</div></div>
+      <div class="arr">→</div>
+      <div class="step"><div class="n">5</div><div class="t">Kunci &amp; Sinkronisasi</div></div>
+    </div>
+  </div>
+
+  <h3>1. Pembukaan Sesi</h3>
+  <p>Anggota Finance membuka aplikasi, memilih jenis ibadah (Ibadah Raya, Pemuda, Sekolah Minggu), tanggal, dan jam. Semua data persembahan terikat rapi pada sesi ini.</p>
+
+  <h3>2. Input Denominasi &amp; Kategori</h3>
+  <p>Tim memasukkan jumlah lembar uang per pecahan (mis. 62 lembar Rp100.000) — sistem menghitung totalnya otomatis. Lalu mengelompokkan dana ke kategori: Perpuluhan, Janji Iman, Persembahan Umum, dll.</p>
+
+  <h3>3. Balancing Sistem</h3>
+  <p>Sistem membandingkan <b>total fisik uang</b> dengan <b>total kategori</b>. Hasilnya ditampilkan sebagai indikator:</p>
+  <p style="margin:4px 0;"><span class="pill pill-green">● MATCH (Hijau)</span> &nbsp; total cocok, boleh lanjut &nbsp;&nbsp; <span class="pill pill-red">● MISMATCH (Merah)</span> &nbsp; ada selisih, harus dicek ulang</p>
+
+  <h3>4. Otorisasi &amp; Tanda Tangan</h3>
+  <p>Jika sudah MATCH, kanvas tanda tangan aktif. Gembala dan Saksi membubuhkan tanda tangan digital langsung di layar sebagai bukti sah.</p>
+
+  <h3>5. Kunci Data &amp; Sinkronisasi</h3>
+  <p>Setelah ditandatangani, data <b>otomatis terkunci</b> (tidak bisa diubah di aplikasi) dan terkirim ke Web Admin untuk memperbarui pos-pos kas terkait secara real-time.</p>
+
+  <div class="note"><b>Pengaman:</b> Tombol "Simpan &amp; Kunci" hanya aktif jika status data sudah seimbang (balanced). Ini mencegah penyimpanan data yang tidak akurat.</div>
+</div>
+
+<!-- ===================== 4. FITUR MOBILE ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">4</span><h2 style="border:none;margin:0;padding:0;">Fitur Aplikasi Mobile (Tim Finance)</h2></div>
+  <p class="muted">Difokuskan pada entri data yang cepat, aman, dan meminimalkan kesalahan ketik di lapangan.</p>
+
+  <table>
+    <tr><th style="width:32%;">Fitur</th><th>Deskripsi &amp; Cara Kerja</th></tr>
+    <tr>
+      <td><b>Manajemen Sesi Ibadah</b></td>
+      <td>Memilih jenis ibadah, tanggal, dan jam sesi untuk melokalisasi data persembahan. Setiap transaksi terikat pada metadata ibadah yang spesifik.</td>
+    </tr>
+    <tr>
+      <td><b>Kalkulator Denominasi</b></td>
+      <td>Input jumlah lembar uang per pecahan (Rp100.000 sampai Rp1.000). Sistem menghitung subtotal &amp; total fisik otomatis — menghapus risiko salah hitung manual.</td>
+    </tr>
+    <tr>
+      <td><b>Form Kategori Persembahan</b></td>
+      <td>Input nominal per kategori: Perpuluhan, Janji Iman, Kolekte Umum, Persembahan Khusus, dll.</td>
+    </tr>
+    <tr>
+      <td><b>Validasi MATCH / MISMATCH</b></td>
+      <td>Indikator hijau/merah membandingkan total fisik vs total kategori secara real-time. Mencegah data yang tidak seimbang tersimpan.</td>
+    </tr>
+    <tr>
+      <td><b>Tanda Tangan Digital (E-Signature)</b></td>
+      <td>Kanvas tanda tangan untuk Gembala &amp; Saksi. Aktif hanya bila status sudah balanced. Tanda tangan tersimpan sebagai bukti otorisasi.</td>
+    </tr>
+    <tr>
+      <td><b>Penyimpanan Lokal Sementara</b></td>
+      <td>Setiap ketikan otomatis disimpan ke memori HP. Jika aplikasi tertutup atau baterai habis, data input tidak hilang dan bisa dilanjutkan.</td>
+    </tr>
+    <tr>
+      <td><b>Dashboard &amp; Saldo</b></td>
+      <td>Menampilkan ringkasan saldo kas dan akses cepat ke fungsi utama.</td>
+    </tr>
+    <tr>
+      <td><b>Pengajuan Pengeluaran</b></td>
+      <td>Mengajukan permintaan pengeluaran beserta unggah foto bukti/nota untuk disetujui Bendahara.</td>
+    </tr>
+  </table>
+
+  <div class="ok"><b>Anti-hilang data:</b> kombinasi penyimpanan lokal + sinkronisasi cloud memastikan tidak ada data yang hilang sebelum proses unggah selesai sepenuhnya.</div>
+</div>
+
+<!-- ===================== 5. FITUR WEB ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">5</span><h2 style="border:none;margin:0;padding:0;">Fitur Web Dashboard (Admin &amp; Akuntansi)</h2></div>
+  <p class="muted">Kendali penuh atas tata kelola keuangan, struktur akuntansi, dan pengeluaran kas gereja.</p>
+
+  <h3>A. Modul Akuntansi Standar &amp; Multi-Kas</h3>
+  <table>
+    <tr><th style="width:32%;">Fitur</th><th>Deskripsi</th></tr>
+    <tr>
+      <td><b>Bagan Akun (Chart of Accounts)</b></td>
+      <td>Struktur kode akun akuntansi nirlaba yang memisahkan Aset, Kewajiban, Ekuitas (Dana Terikat &amp; Tidak Terikat), Pendapatan, dan Beban.</td>
+    </tr>
+    <tr>
+      <td><b>Manajemen Multi-Kas</b></td>
+      <td>Pengaturan pos kas/rekening spesifik (Kas Operasional, Kas Pembangunan, Kas Diakonia, dll). Setiap pengeluaran wajib memilih pos kas asal.</td>
+    </tr>
+    <tr>
+      <td><b>Jurnal Umum &amp; Penyesuaian</b></td>
+      <td>Pencatatan transaksi non-persembahan secara manual: biaya admin bank, penyusutan aset, atau koreksi pembukuan — dengan validasi debit = kredit.</td>
+    </tr>
+    <tr>
+      <td><b>Manajemen Pengeluaran</b></td>
+      <td>Input pengeluaran disertai unggah bukti nota. Alur persetujuan: diajukan → disetujui/ditolak oleh Bendahara.</td>
+    </tr>
+    <tr>
+      <td><b>Anggaran (Budgeting)</b></td>
+      <td>Penetapan pagu anggaran per divisi/kategori untuk mengontrol agar pengeluaran tidak melebihi rencana bulanan/tahunan.</td>
+    </tr>
+  </table>
+
+  <h3>B. Pemantauan &amp; Otorisasi</h3>
+  <div class="grid2">
+    <div class="card"><h4>Tinjau Sesi Ibadah</h4><p>Melihat rincian setiap sesi: denominasi, kategori, status MATCH/MISMATCH, dan gambar tanda tangan Gembala &amp; Saksi.</p></div>
+    <div class="card"><h4>Persetujuan Pengeluaran</h4><p>Menyetujui atau menolak pengajuan pengeluaran dari Tim Finance lengkap dengan catatan.</p></div>
+    <div class="card"><h4>Export Excel</h4><p>Mengekspor data persembahan, pengeluaran, anggaran, dan laporan ke file Excel (.xlsx) untuk analisis mandiri.</p></div>
+    <div class="card"><h4>Dashboard Ringkas</h4><p>Ringkasan saldo total, pemasukan &amp; pengeluaran bulanan, grafik tren, dan transaksi terbaru.</p></div>
+  </div>
+</div>
+
+<!-- ===================== 6. LAPORAN ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">6</span><h2 style="border:none;margin:0;padding:0;">Modul Laporan Keuangan</h2></div>
+  <p class="muted">Tiga laporan keuangan standar akuntansi nirlaba, diturunkan otomatis dari satu sumber data (Jurnal Umum) sehingga selalu konsisten.</p>
+
+  <div style="margin-top:14px;">
+    <div class="card" style="margin-bottom:12px;border-left:4px solid var(--green);">
+      <h4 style="color:var(--green);">📈 1. Laporan Aktivitas (Income Statement)</h4>
+      <p>Menampilkan total pendapatan persembahan berdasarkan kategori dikurangi total pengeluaran beban operasional, menghasilkan surplus/defisit periode.</p>
+    </div>
+    <div class="card" style="margin-bottom:12px;border-left:4px solid var(--primary);">
+      <h4 style="color:var(--primary);">⚖️ 2. Laporan Posisi Keuangan (Neraca)</h4>
+      <p>Menyajikan saldo riil seluruh akun kas/bank, piutang janji iman, aset tetap, serta posisi ekuitas dana gereja (terikat &amp; tidak terikat).</p>
+    </div>
+    <div class="card" style="margin-bottom:12px;border-left:4px solid var(--gold);">
+      <h4 style="color:var(--gold);">💧 3. Laporan Arus Kas (Cash Flow)</h4>
+      <p>Melacak likuiditas — mutasi kas masuk &amp; keluar yang dikelompokkan berdasarkan aktivitas operasional, investasi, dan pendanaan.</p>
+    </div>
+  </div>
+
+  <h3>Pelaporan Tambahan</h3>
+  <ul>
+    <li><b>Anggaran vs Realisasi</b> — perbandingan pagu anggaran dengan pengeluaran aktual per kategori/bulan.</li>
+    <li><b>Ringkasan Bulanan</b> — total persembahan dan jumlah transaksi per bulan.</li>
+    <li><b>Komposisi Pengeluaran</b> — grafik proporsi pengeluaran per kategori.</li>
+    <li><b>Export ke Excel</b> — setiap laporan dapat diunduh dalam format .xlsx.</li>
+  </ul>
+
+  <div class="ok"><b>Keunggulan teknis:</b> karena semua laporan bersumber dari Jurnal Umum yang sama, angka antar-laporan dijamin konsisten — tidak ada selisih akibat perhitungan terpisah.</div>
+</div>
+
+<!-- ===================== 7. BACKUP ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">7</span><h2 style="border:none;margin:0;padding:0;">Modul Pencadangan &amp; Pemulihan Data</h2></div>
+  <p class="muted">Menjamin keamanan data keuangan tingkat tinggi dari risiko kegagalan sistem maupun kendala operasional.</p>
+
+  <div class="grid2" style="margin-top:12px;">
+    <div class="card">
+      <h4>🕑 Pencadangan Otomatis</h4>
+      <p>Sistem mencadangkan database penuh setiap hari pada jam non-aktif (02:00 WIB). File dienkripsi dan disimpan terpisah dari database utama.</p>
+      <p class="small muted" style="margin-top:6px;"><b>Retensi:</b> 30 cadangan harian + 12 cadangan bulanan.</p>
+    </div>
+    <div class="card">
+      <h4>⬇️ Pencadangan Manual Instan</h4>
+      <p>Tombol "Picu Pencadangan Data" untuk mengunduh salinan kapan saja, dikompresi dalam satu file ZIP.</p>
+      <p class="small muted" style="margin-top:6px;"><b>Format:</b> Excel (.xlsx) untuk dibuka langsung + format sistem untuk pemulihan.</p>
+    </div>
+  </div>
+
+  <h3>Log Cadangan</h3>
+  <p>Halaman khusus meninjau riwayat backup: tanggal, tipe (Otomatis/Manual), ukuran file, status (Sukses/Gagal), dan pelaksana (Sistem/Nama Admin).</p>
+
+  <h3>Pemulihan Data (Restore)</h3>
+  <p>Pemulihan dilakukan dengan <b>mengunggah file Excel</b> hasil backup — mudah digunakan dan aman, tanpa perlu keahlian teknis. Sistem menampilkan pratinjau jumlah data sebelum konfirmasi.</p>
+
+  <div class="note"><b>Pengamanan ketat:</b> hak akses pemulihan data hanya dapat dieksekusi oleh <b>Super Admin / Gembala Senior</b> dengan otentikasi berlapis.</div>
+
+  <table style="margin-top:14px;">
+    <tr><th>Tanggal</th><th>Tipe</th><th>Status</th><th>Ukuran</th><th>Pelaksana</th></tr>
+    <tr><td>23 Jun 2026, 02:00</td><td>Otomatis</td><td><span class="pill pill-green">Sukses</span></td><td>4.2 MB</td><td>Sistem</td></tr>
+    <tr><td>22 Jun 2026, 02:00</td><td>Otomatis</td><td><span class="pill pill-green">Sukses</span></td><td>4.1 MB</td><td>Sistem</td></tr>
+    <tr><td>20 Jun 2026, 14:32</td><td>Manual</td><td><span class="pill pill-green">Sukses</span></td><td>4.1 MB</td><td>Rina (Bendahara)</td></tr>
+  </table>
+</div>
+
+<!-- ===================== 8 & 9. ROLE + KEAMANAN ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">8</span><h2 style="border:none;margin:0;padding:0;">Role &amp; Hak Akses Pengguna</h2></div>
+  <p class="muted">Setiap pengguna diberi peran dengan hak akses yang sesuai untuk menjaga keamanan dan akuntabilitas.</p>
+
+  <table>
+    <tr><th>Peran</th><th>Deskripsi</th><th>Hak Akses Utama</th></tr>
+    <tr><td><span class="pill pill-red">Super Admin</span></td><td>Gembala Senior</td><td>Semua akses + pemulihan data (restore)</td></tr>
+    <tr><td><span class="pill pill-blue">Admin</span></td><td>Administrator sistem</td><td>Kelola akun, COA, semua data &amp; pengaturan</td></tr>
+    <tr><td><span class="pill pill-green">Bendahara</span></td><td>Bendahara gereja</td><td>Input data, setujui/tolak pengeluaran, kelola kas &amp; jurnal</td></tr>
+    <tr><td><span class="pill pill-gold">Majelis</span></td><td>Majelis / pengurus</td><td>Lihat semua data, ajukan pengeluaran</td></tr>
+  </table>
+
+  <div class="secthead" style="margin-top:26px;"><span class="num">9</span><h2 style="border:none;margin:0;padding:0;">Keamanan &amp; Teknologi</h2></div>
+
+  <div class="grid2" style="margin-top:10px;">
+    <div class="card"><h4>🔐 Keamanan Data</h4><p>Keamanan berlapis tingkat baris (Row Level Security), enkripsi file cadangan, dan otentikasi berlapis untuk aksi sensitif.</p></div>
+    <div class="card"><h4>✍️ Bukti Otorisasi</h4><p>Tanda tangan digital + penguncian data otomatis memastikan setiap transaksi tervalidasi dan tidak dapat dimanipulasi.</p></div>
+    <div class="card"><h4>☁️ Infrastruktur Cloud</h4><p>Supabase (PostgreSQL) — database relasional skala besar dengan sinkronisasi real-time.</p></div>
+    <div class="card"><h4>📱 Lintas Platform</h4><p>Aplikasi mobile (Flutter) &amp; web dashboard (Next.js) dapat diakses dari perangkat apa pun.</p></div>
+  </div>
+
+  <table style="margin-top:14px;">
+    <tr><th>Komponen</th><th>Teknologi</th></tr>
+    <tr><td>Aplikasi Mobile</td><td>Flutter (Android &amp; iOS)</td></tr>
+    <tr><td>Web Dashboard</td><td>Next.js (Web Responsif)</td></tr>
+    <tr><td>Database &amp; Backend</td><td>Supabase / PostgreSQL + Node.js</td></tr>
+    <tr><td>Penyimpanan Lokal Mobile</td><td>SQLite (offline caching)</td></tr>
+  </table>
+</div>
+
+<!-- ===================== 10. MATRIKS FITUR ===================== -->
+<div class="page">
+  <div class="secthead"><span class="num">10</span><h2 style="border:none;margin:0;padding:0;">Ringkasan Matriks Fitur</h2></div>
+  <p class="muted">Ketersediaan fitur di masing-masing platform.</p>
+
+  <table>
+    <tr><th style="width:54%;">Fitur</th><th style="text-align:center;">Mobile</th><th style="text-align:center;">Web Admin</th></tr>
+    <tr><td>Login &amp; keamanan akun</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Dashboard &amp; saldo kas</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Manajemen sesi ibadah</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;">tinjau</td></tr>
+    <tr><td>Kalkulator denominasi</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;">—</td></tr>
+    <tr><td>Input kategori persembahan</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;">—</td></tr>
+    <tr><td>Validasi MATCH / MISMATCH</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;">tinjau</td></tr>
+    <tr><td>Tanda tangan digital</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;">tinjau</td></tr>
+    <tr><td>Penyimpanan lokal sementara</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;">—</td></tr>
+    <tr><td>Ajukan pengeluaran</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Setujui / tolak pengeluaran</td><td style="text-align:center;">—</td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Bagan Akun (COA)</td><td style="text-align:center;">—</td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Manajemen multi-kas</td><td style="text-align:center;">—</td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Jurnal umum &amp; penyesuaian</td><td style="text-align:center;">—</td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Anggaran (budgeting)</td><td style="text-align:center;">lihat</td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>3 Laporan keuangan standar</td><td style="text-align:center;">ringkas</td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Export Excel</td><td style="text-align:center;">—</td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Backup &amp; recovery</td><td style="text-align:center;">—</td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+    <tr><td>Sinkronisasi real-time</td><td style="text-align:center;"><span class="chk">✓</span></td><td style="text-align:center;"><span class="chk">✓</span></td></tr>
+  </table>
+
+  <div style="margin-top:40px;text-align:center;padding:24px;background:var(--soft);border-radius:12px;">
+    <div style="font-size:13pt;font-weight:700;color:var(--primary);margin-bottom:6px;">Sistem Akuntansi &amp; Bendahara Gereja v2.0</div>
+    <p class="muted small" style="margin:0;">Solusi keuangan gereja yang akurat, aman, dan modern.<br>Dokumen ini disusun sebagai gambaran fitur &amp; fungsi untuk calon pengguna.</p>
+  </div>
+</div>
+
+</body>
+</html>

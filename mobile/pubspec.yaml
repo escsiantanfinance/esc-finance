@@ -1,0 +1,24 @@
+name: esc_siantan_finance
+description: Aplikasi mobile Tim Finance — ESC Siantan Finance
+publish_to: "none"
+version: 2.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.5.6   # backend (auth, postgrest, storage)
+  provider: ^6.1.2           # state management
+  sqflite: ^2.3.3            # penyimpanan lokal draft sesi
+  path: ^1.9.0
+  signature: ^5.5.0          # kanvas tanda tangan digital
+  intl: ^0.19.0              # format tanggal & rupiah
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

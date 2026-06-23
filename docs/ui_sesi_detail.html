@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{width:1200px;height:760px;background:#eef2f7;font-family:'Segoe UI',Arial,sans-serif;color:#1f2937;padding:24px}
+  .app{width:1152px;min-height:712px;background:#fff;border-radius:16px;overflow:hidden;display:flex;box-shadow:0 8px 28px rgba(30,64,175,.12)}
+  .side{width:210px;background:#0f172a;color:#cbd5e1;padding:20px 14px;flex-shrink:0}
+  .brand{color:#fff;font-weight:700;font-size:15px}.brand small{display:block;color:#64748b;font-size:11px;font-weight:400;margin-top:2px}
+  .nav{margin-top:22px}
+  .it{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;font-size:13px;margin-bottom:3px;color:#94a3b8}
+  .it.on{background:#1E40AF;color:#fff;font-weight:600}.it .i{width:17px;text-align:center}
+  .main{flex:1;padding:22px 26px}
+  .h1{font-size:18px;font-weight:700;color:#0f172a}.sub{color:#6b7280;font-size:12px}
+  .bar{display:flex;align-items:center;margin-bottom:18px}
+  .panel{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:15px 17px;margin-bottom:14px}
+  .panel h3{font-size:13px;font-weight:700;margin-bottom:10px;color:#0f172a}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  td{padding:7px 2px;border-bottom:1px solid #f1f5f9}
+  .tot td{border-top:2px solid #e5e7eb;border-bottom:none;font-weight:700;padding-top:9px}
+  .right{text-align:right}
+  .badge{display:inline-block;padding:6px 14px;border-radius:14px;font-size:13px;font-weight:700}
+  .b-green{background:#d1fae5;color:#065f46}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .sig{height:72px;border:1px dashed #cbd5e1;border-radius:8px;background:#f9fafb;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;color:#64748b;font-size:19px}
+  .cap{font-size:12px;color:#6b7280;margin-bottom:6px}.tm{font-size:11px;color:#94a3b8;margin-top:5px}
+</style></head><body>
+  <div class="app">
+    <div class="side">
+      <div class="brand">ESC Siantan<small>Admin keuangan</small></div>
+      <div class="nav">
+        <div class="it"><span class="i">🏠</span>Dashboard</div>
+        <div class="it on"><span class="i">💵</span>Sesi ibadah</div>
+        <div class="it"><span class="i">📒</span>Jurnal umum</div>
+        <div class="it"><span class="i">💳</span>Akun &amp; kas</div>
+        <div class="it"><span class="i">🧾</span>Pengeluaran</div>
+        <div class="it"><span class="i">📅</span>Anggaran</div>
+        <div class="it"><span class="i">📊</span>Laporan</div>
+        <div class="it"><span class="i">🗄️</span>Backup</div>
+      </div>
+      <div style="margin-top:26px;border-top:1px solid #1e293b;padding-top:12px"><div class="it"><span class="i">🚪</span>Keluar</div></div>
+    </div>
+    <div class="main">
+      <div class="bar">
+        <span style="font-size:18px;margin-right:10px;color:#6b7280">←</span>
+        <div><div class="h1">Ibadah Raya 1 — 22 Juni 2026</div><div class="sub">Petugas: Rina &nbsp;•&nbsp; Kas tujuan: Kas Gereja</div></div>
+        <span class="badge b-green" style="margin-left:auto">✓ MATCH — selisih Rp 0</span>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h3>Kalkulator denominasi (fisik)</h3>
+          <table>
+            <tr><td>Rp 100.000 × 62</td><td class="right">6.200.000</td></tr>
+            <tr><td>Rp 50.000 × 40</td><td class="right">2.000.000</td></tr>
+            <tr><td>Rp 20.000 × 55</td><td class="right">1.100.000</td></tr>
+            <tr><td>Rp 10.000 × 15</td><td class="right">150.000</td></tr>
+            <tr><td>Rp 5.000 × 0</td><td class="right">0</td></tr>
+            <tr class="tot"><td>Total fisik</td><td class="right">Rp 9.450.000</td></tr>
+          </table>
+        </div>
+        <div class="panel"><h3>Kategori persembahan</h3>
+          <table>
+            <tr><td>Perpuluhan</td><td class="right">4.500.000</td></tr>
+            <tr><td>Persembahan umum</td><td class="right">3.200.000</td></tr>
+            <tr><td>Janji iman</td><td class="right">1.750.000</td></tr>
+            <tr><td>Persembahan khusus</td><td class="right">0</td></tr>
+            <tr><td>&nbsp;</td><td class="right">&nbsp;</td></tr>
+            <tr class="tot"><td>Total kategori</td><td class="right">Rp 9.450.000</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="panel"><h3>Otorisasi &amp; tanda tangan digital</h3>
+        <div class="grid2">
+          <div><div class="cap">Gembala — Pdt. Samuel Tarigan</div><div class="sig">Samuel T.</div><div class="tm">Ditandatangani 22 Jun 2026, 12:14</div></div>
+          <div><div class="cap">Saksi — Maria Sinaga</div><div class="sig">Maria S.</div><div class="tm">Ditandatangani 22 Jun 2026, 12:15</div></div>
+        </div>
+        <div style="margin-top:13px;color:#059669;font-size:12px;font-weight:600">🔒 Data terkunci — sudah disinkronkan ke kas &amp; jurnal, tidak dapat diubah lagi</div>
+      </div>
+    </div>
+  </div>
+</body></html>

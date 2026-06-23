@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{width:1200px;height:660px;background:#eef2f7;font-family:'Segoe UI',Arial,sans-serif;color:#1f2937;padding:24px}
+  .app{width:1152px;min-height:612px;background:#fff;border-radius:16px;overflow:hidden;display:flex;box-shadow:0 8px 28px rgba(30,64,175,.12)}
+  .side{width:210px;background:#0f172a;color:#cbd5e1;padding:20px 14px;flex-shrink:0}
+  .brand{color:#fff;font-weight:700;font-size:15px}.brand small{display:block;color:#64748b;font-size:11px;font-weight:400;margin-top:2px}
+  .nav{margin-top:22px}
+  .it{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;font-size:13px;margin-bottom:3px;color:#94a3b8}
+  .it.on{background:#1E40AF;color:#fff;font-weight:600}.it .i{width:17px;text-align:center}
+  .main{flex:1;padding:22px 26px}
+  .h1{font-size:20px;font-weight:700;color:#0f172a}.sub{color:#6b7280;font-size:12px}
+  .bar{display:flex;align-items:center;margin-bottom:16px}
+  .btn{background:#1E40AF;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;padding:10px 16px}
+  .btn-line{background:#fff;border:1px solid #cbd5e1;color:#374151;border-radius:8px;font-size:12px;font-weight:600;padding:10px 16px}
+  .panel{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:15px 18px;margin-bottom:14px}
+  .panel h3{font-size:13px;font-weight:700;margin-bottom:11px;color:#0f172a}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;color:#6b7280;font-weight:600;padding:9px 6px;border-bottom:2px solid #e5e7eb;font-size:11px}
+  td{padding:10px 6px;border-bottom:1px solid #f1f5f9}
+  .right{text-align:right}
+  .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+  .b-green{background:#d1fae5;color:#065f46}.b-blue{background:#dbeafe;color:#1e40af}.b-gray{background:#eef2f7;color:#6b7280}
+  .restore{border:1px dashed #cbd5e1;border-radius:12px;padding:16px 18px;background:#fafbfc}
+  .restore h3{font-size:13px;font-weight:700;margin-bottom:7px;color:#0f172a}
+  .lock{font-size:12px;color:#92400e;background:#fef3c7;border-radius:8px;padding:8px 12px;margin-bottom:12px;display:inline-block}
+</style></head><body>
+  <div class="app">
+    <div class="side">
+      <div class="brand">ESC Siantan<small>Admin keuangan</small></div>
+      <div class="nav">
+        <div class="it"><span class="i">🏠</span>Dashboard</div>
+        <div class="it"><span class="i">💵</span>Sesi ibadah</div>
+        <div class="it"><span class="i">📒</span>Jurnal umum</div>
+        <div class="it"><span class="i">💳</span>Akun &amp; kas</div>
+        <div class="it"><span class="i">🧾</span>Pengeluaran</div>
+        <div class="it"><span class="i">📅</span>Anggaran</div>
+        <div class="it"><span class="i">📊</span>Laporan</div>
+        <div class="it on"><span class="i">🗄️</span>Backup</div>
+      </div>
+      <div style="margin-top:26px;border-top:1px solid #1e293b;padding-top:12px"><div class="it"><span class="i">🚪</span>Keluar</div></div>
+    </div>
+    <div class="main">
+      <div class="bar"><div><div class="h1">Backup &amp; Recovery</div><div class="sub" style="margin-bottom:0">Pencadangan otomatis harian &amp; pemulihan data</div></div><span class="btn" style="margin-left:auto">🔄 Picu pencadangan sekarang</span></div>
+      <div class="panel"><h3>Riwayat pencadangan</h3>
+        <table>
+          <tr><th>Tanggal</th><th>Tipe</th><th>Format</th><th class="right">Ukuran</th><th>Status</th><th>Pelaksana</th><th class="right">Aksi</th></tr>
+          <tr><td>23 Jun 2026, 02:00</td><td><span class="badge b-gray">Otomatis</span></td><td>.xlsx + .json</td><td class="right">4,2 MB</td><td><span class="badge b-green">✓ Sukses</span></td><td>Sistem</td><td class="right" style="color:#1E40AF;font-weight:600">Unduh</td></tr>
+          <tr><td>22 Jun 2026, 02:00</td><td><span class="badge b-gray">Otomatis</span></td><td>.xlsx + .json</td><td class="right">4,1 MB</td><td><span class="badge b-green">✓ Sukses</span></td><td>Sistem</td><td class="right" style="color:#1E40AF;font-weight:600">Unduh</td></tr>
+          <tr><td>20 Jun 2026, 14:32</td><td><span class="badge b-blue">Manual</span></td><td>.xlsx + .json</td><td class="right">4,1 MB</td><td><span class="badge b-green">✓ Sukses</span></td><td>Rina (Bendahara)</td><td class="right" style="color:#1E40AF;font-weight:600">Unduh</td></tr>
+          <tr><td>19 Jun 2026, 02:00</td><td><span class="badge b-gray">Otomatis</span></td><td>.xlsx + .json</td><td class="right">4,0 MB</td><td><span class="badge b-green">✓ Sukses</span></td><td>Sistem</td><td class="right" style="color:#1E40AF;font-weight:600">Unduh</td></tr>
+        </table>
+        <div style="font-size:11px;color:#94a3b8;margin-top:10px">Retensi: 30 cadangan harian + 12 cadangan bulanan • disimpan terenkripsi (AES-256) di penyimpanan terpisah</div>
+      </div>
+      <div class="restore">
+        <h3>Pulihkan data dari Excel</h3>
+        <div class="lock">🔒 Khusus Super Admin / Gembala Senior — otentikasi berlapis</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:12px">Unggah file <b>.xlsx</b> hasil backup. Sistem menampilkan pratinjau jumlah data per tabel sebelum konfirmasi pemulihan.</div>
+        <span class="btn-line">⬆ Unggah file .xlsx untuk dipulihkan</span>
+      </div>
+    </div>
+  </div>
+</body></html>
