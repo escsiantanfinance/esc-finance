@@ -39,7 +39,7 @@ export default function LoginPage() {
         {/* Panel kiri */}
         <div className="hidden md:flex flex-col justify-center w-2/5 bg-blue-800 text-white p-10">
           <div className="text-5xl">⛪</div>
-          <h1 className="text-2xl font-bold mt-4 leading-tight">ESC Siantan Finance</h1>
+          <h1 className="text-2xl font-bold mt-4 leading-tight">ESC Finance</h1>
           <p className="text-blue-200 text-sm mt-2">Sistem Akuntansi &amp; Bendahara Gereja Terintegrasi</p>
           <ul className="text-blue-100 text-sm mt-8 space-y-2">
             <li>✓ Rekonsiliasi kas otomatis</li>

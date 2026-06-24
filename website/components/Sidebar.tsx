@@ -81,7 +81,7 @@ export default function Sidebar() {
         <div className="flex items-center gap-3">
           <span className="grid place-items-center w-10 h-10 rounded-xl bg-blue-600 text-xl shadow-lg shadow-blue-900/40">⛪</span>
           <div>
-            <p className="font-bold text-[15px] leading-tight">ESC Siantan</p>
+            <p className="font-bold text-[15px] leading-tight">ESC Finance</p>
             <p className="text-slate-400 text-xs">Keuangan Gereja</p>
           </div>
         </div>

@@ -35,7 +35,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-20 h-14 flex items-center justify-between px-6 bg-white/80 backdrop-blur border-b border-slate-200">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-400">ESC Siantan</span>
+            <span className="text-slate-400">ESC Finance</span>
             <span className="text-slate-300">/</span>
             <span className="font-semibold text-slate-700">{section}</span>
           </div>

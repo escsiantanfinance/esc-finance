@@ -6,8 +6,8 @@ import Shell from '@/components/Shell'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'ESC Siantan Finance | Admin',
-  description: 'Sistem Manajemen Keuangan ESC Siantan',
+  title: 'ESC Finance | Admin',
+  description: 'Sistem Akuntansi & Bendahara Gereja — ESC Finance',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

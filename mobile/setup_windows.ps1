@@ -25,8 +25,12 @@ flutter create --org com.escsiantan --project-name esc_siantan_finance --platfor
 # 2b) Polish: nama aplikasi di home screen + workaround build Kotlin (Windows)
 $manifest = "android\app\src\main\AndroidManifest.xml"
 if (Test-Path $manifest) {
-  (Get-Content $manifest -Raw) -replace 'android:label="esc_siantan_finance"', 'android:label="ESC Siantan Finance"' |
+  (Get-Content $manifest -Raw) -replace 'android:label="esc_siantan_finance"', 'android:label="ESC Finance"' |
     Set-Content $manifest -Encoding UTF8
+}
+# Generate ikon launcher (church + koin Rp) bila asset & paket tersedia
+if (Test-Path "assets\icon\esc_icon_full.png") {
+  flutter pub run flutter_launcher_icons 2>&1 | Out-Null
 }
 $gp = "android\gradle.properties"
 if (Test-Path $gp) {

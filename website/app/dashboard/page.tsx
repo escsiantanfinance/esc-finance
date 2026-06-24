@@ -32,7 +32,7 @@ export default function DashboardPage() {
     <main className="flex-1 p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Ringkasan keuangan ESC Siantan</p>
+          <p className="text-gray-500 mt-1">Ringkasan keuangan ESC Finance</p>
         </div>
 
         {loading ? (
