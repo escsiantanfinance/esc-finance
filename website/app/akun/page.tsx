@@ -15,6 +15,8 @@ export default function AkunKasPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ nama: '', tipe: 'tunai', saldo_awal: '', akun_id: '', nomor_rekening: '' })
   const [saving, setSaving] = useState(false)
+  const [edit, setEdit] = useState<Kas | null>(null)
+  const [editForm, setEditForm] = useState({ nama: '', tipe: 'tunai', nomor_rekening: '', akun_id: '', saldo_awal: '', is_aktif: true })
 
   async function load() {
     const [{ data: k }, { data: a }] = await Promise.all([
@@ -26,6 +28,34 @@ export default function AkunKasPage() {
     setLoading(false)
   }
   useEffect(() => { load() }, [])
+
+  function openEdit(k: Kas) {
+    setEdit(k)
+    setEditForm({
+      nama: k.nama, tipe: k.tipe, nomor_rekening: k.nomor_rekening ?? '',
+      akun_id: k.akun_id ?? '', saldo_awal: String(k.saldo_awal ?? 0), is_aktif: k.is_aktif,
+    })
+  }
+
+  async function saveEdit() {
+    if (!edit || !editForm.nama) return
+    setSaving(true)
+    // Saldo awal berubah → geser saldo_saat_ini dengan selisih yang sama (anti-drift)
+    const newAwal = Number(editForm.saldo_awal || 0)
+    const delta = newAwal - Number(edit.saldo_awal ?? 0)
+    const { error } = await supabase.from('kas').update({
+      nama: editForm.nama,
+      tipe: editForm.tipe,
+      nomor_rekening: editForm.nomor_rekening || null,
+      akun_id: editForm.akun_id || null,
+      saldo_awal: newAwal,
+      saldo_saat_ini: Number(edit.saldo_saat_ini ?? 0) + delta,
+      is_aktif: editForm.is_aktif,
+    }).eq('id', edit.id)
+    setSaving(false)
+    if (error) { alert('Gagal menyimpan: ' + error.message); return }
+    setEdit(null); load()
+  }
 
   const asetAkun = akun.filter(a => a.tipe === 'aset' && !a.is_header)
 
@@ -58,17 +88,22 @@ export default function AkunKasPage() {
           <button onClick={() => setShowAdd(true)} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Kas</button>
         </div>
 
-        {/* Kas cards */}
+        {/* Kas cards — klik untuk ubah/nonaktifkan */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {kas.map(k => (
-            <div key={k.id} className="bg-white rounded-2xl border shadow-sm p-5">
+            <button key={k.id} onClick={() => openEdit(k)} title="Klik untuk ubah / nonaktifkan"
+              className={`text-left bg-white rounded-2xl border shadow-sm p-5 hover:border-blue-400 hover:shadow transition-all ${!k.is_aktif ? 'opacity-60' : ''}`}>
               <div className="flex items-center justify-between">
                 <p className="font-semibold text-gray-800">{k.nama}</p>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 capitalize">{k.tipe}</span>
+                <div className="flex items-center gap-1">
+                  {!k.is_aktif && <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">nonaktif</span>}
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 capitalize">{k.tipe}</span>
+                </div>
               </div>
               <p className="text-2xl font-bold text-blue-700 mt-2">{formatRupiah(k.saldo_saat_ini)}</p>
               {k.nomor_rekening && <p className="text-xs text-gray-400 mt-1">No. {k.nomor_rekening}</p>}
-            </div>
+              <p className="text-[11px] text-gray-300 mt-2">✎ ubah</p>
+            </button>
           ))}
         </div>
 
@@ -113,6 +148,35 @@ export default function AkunKasPage() {
               <div className="flex gap-2 mt-5">
                 <button onClick={() => setShowAdd(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
                 <button onClick={addKas} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal ubah / nonaktifkan kas */}
+        {edit && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setEdit(null)}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <h3 className="font-bold text-lg mb-4">Ubah Kas — {edit.nama}</h3>
+              <div className="space-y-3">
+                <input placeholder="Nama kas" value={editForm.nama} onChange={e => setEditForm({ ...editForm, nama: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
+                <select value={editForm.tipe} onChange={e => setEditForm({ ...editForm, tipe: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
+                  <option value="tunai">Tunai</option><option value="bank">Bank</option><option value="digital">Digital</option>
+                </select>
+                <input placeholder="Nomor rekening (opsional)" value={editForm.nomor_rekening} onChange={e => setEditForm({ ...editForm, nomor_rekening: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
+                <label className="text-sm text-gray-600 block">Saldo awal (Rp)
+                  <input type="number" value={editForm.saldo_awal} onChange={e => setEditForm({ ...editForm, saldo_awal: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" />
+                  <span className="text-[11px] text-gray-400">Mengubah saldo awal otomatis menggeser saldo saat ini & Neraca.</span>
+                </label>
+                <select value={editForm.akun_id} onChange={e => setEditForm({ ...editForm, akun_id: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
+                  <option value="">— Akun COA terkait (Aset) —</option>
+                  {asetAkun.map(a => <option key={a.id} value={a.id}>{a.kode_akun} · {a.nama_akun}</option>)}
+                </select>
+                <label className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={editForm.is_aktif} onChange={e => setEditForm({ ...editForm, is_aktif: e.target.checked })} /> Kas aktif (hilangkan centang untuk menonaktifkan)</label>
+              </div>
+              <div className="flex gap-2 mt-5">
+                <button onClick={() => setEdit(null)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
+                <button onClick={saveEdit} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan perubahan'}</button>
               </div>
             </div>
           </div>

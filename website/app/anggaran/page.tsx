@@ -5,22 +5,51 @@ import { exportToExcel } from '@/lib/export-excel'
 
 const BULAN = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
+const emptyForm = { bulan: String(new Date().getMonth() + 1), kategori_id: '', nama_pos: '', jumlah_dianggarkan: '', keterangan: '' }
+const BULAN_OPT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+
 export default function AnggaranPage() {
   const [data, setData] = useState<any[]>([])
   const [tahun, setTahun] = useState(new Date().getFullYear())
   const [loading, setLoading] = useState(true)
+  const [kategori, setKategori] = useState<any[]>([])
+  const [show, setShow] = useState(false)
+  const [form, setForm] = useState({ ...emptyForm })
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState('')
 
+  async function load() {
+    setLoading(true)
+    // v_anggaran_realisasi: anggaran + realisasi (pengeluaran disetujui) per pos
+    const { data: rows } = await supabase.from('v_anggaran_realisasi')
+      .select('*').eq('tahun', tahun)
+    setData(rows ?? [])
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [tahun])
   useEffect(() => {
-    async function load() {
-      setLoading(true)
-      // v_anggaran_realisasi: anggaran + realisasi (pengeluaran disetujui) per pos
-      const { data: rows } = await supabase.from('v_anggaran_realisasi')
-        .select('*').eq('tahun', tahun)
-      setData(rows ?? [])
-      setLoading(false)
-    }
-    load()
-  }, [tahun])
+    supabase.from('kategori_pengeluaran').select('id,nama').eq('is_active', true).order('nama')
+      .then(({ data }) => setKategori(data ?? []))
+  }, [])
+
+  async function addAnggaran() {
+    if (!form.nama_pos || !form.jumlah_dianggarkan || Number(form.jumlah_dianggarkan) < 0) { setMsg('Nama pos & jumlah wajib diisi'); return }
+    setSaving(true); setMsg('')
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('anggaran').insert({
+      tahun,
+      bulan: form.bulan ? Number(form.bulan) : null,
+      kategori_id: form.kategori_id || null,
+      nama_pos: form.nama_pos,
+      jumlah_dianggarkan: Number(form.jumlah_dianggarkan),
+      keterangan: form.keterangan || null,
+      periode: form.bulan ? 'bulanan' : 'tahunan',
+      dibuat_oleh: user?.id ?? null,
+    })
+    setSaving(false)
+    if (error) { setMsg('Gagal: ' + error.message); return }
+    setShow(false); setForm({ ...emptyForm }); load()
+  }
 
   const totalAnggaran = data.reduce((s, r) => s + Number(r.jumlah_dianggarkan), 0)
   const totalRealisasi = data.reduce((s, r) => s + Number(r.realisasi), 0)
@@ -65,6 +94,7 @@ export default function AnggaranPage() {
             <select value={tahun} onChange={e => setTahun(Number(e.target.value))} className="border rounded-xl px-3 py-1.5 text-sm">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
+            <button onClick={() => { setForm({ ...emptyForm }); setMsg(''); setShow(true) }} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-1.5 text-sm font-semibold">+ Tambah</button>
           </div>
         </div>
 
@@ -142,6 +172,42 @@ export default function AnggaranPage() {
           })
         }
         <p className="text-xs text-gray-400 mt-3">ℹ️ Realisasi dihitung otomatis dari pengeluaran berstatus <b>disetujui</b> pada kategori & periode yang sama. Baris merah = melebihi pagu.</p>
+
+        {show && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setShow(false)}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <h3 className="font-bold text-lg mb-4">Tambah Anggaran {tahun}</h3>
+              <div className="space-y-3">
+                <label className="text-sm block">Periode bulan
+                  <select value={form.bulan} onChange={e => setForm({ ...form, bulan: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+                    <option value="">Tahunan (seluruh tahun)</option>
+                    {BULAN_OPT.map((b, i) => <option key={i} value={i + 1}>{b}</option>)}
+                  </select>
+                </label>
+                <label className="text-sm block">Kategori
+                  <select value={form.kategori_id} onChange={e => setForm({ ...form, kategori_id: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+                    <option value="">— pilih kategori —</option>
+                    {kategori.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                  </select>
+                </label>
+                <label className="text-sm block">Nama pos anggaran
+                  <input value={form.nama_pos} onChange={e => setForm({ ...form, nama_pos: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="mis. Operasional Bulanan" />
+                </label>
+                <label className="text-sm block">Jumlah dianggarkan (Rp)
+                  <input type="number" value={form.jumlah_dianggarkan} onChange={e => setForm({ ...form, jumlah_dianggarkan: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="0" />
+                </label>
+                <label className="text-sm block">Keterangan (opsional)
+                  <input value={form.keterangan} onChange={e => setForm({ ...form, keterangan: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" />
+                </label>
+              </div>
+              {msg && <p className="text-xs mt-3 text-red-600">{msg}</p>}
+              <div className="flex gap-2 mt-5">
+                <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
+                <button onClick={addAnggaran} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
+              </div>
+            </div>
+          </div>
+        )}
     </main>
   )
 }

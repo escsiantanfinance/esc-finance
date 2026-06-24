@@ -23,6 +23,7 @@ const navGroups: { title: string; items: NavItem[] }[] = [
     title: 'Akuntansi',
     items: [
       { href: '/akun', label: 'Akun & Kas', icon: '💳', vis: 'staff' },
+      { href: '/analitik-kas', label: 'Analitik Kas', icon: '📈', vis: 'staff' },
       { href: '/jurnal', label: 'Jurnal Umum', icon: '📒', vis: 'staff' },
       { href: '/laporan', label: 'Laporan', icon: '📊', vis: 'all' },
     ],

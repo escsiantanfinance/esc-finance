@@ -1,0 +1,12 @@
+# Hanya folder website/ yang dibutuhkan Vercel (rootDirectory=website).
+# Kecualikan artefak besar & non-web agar upload deploy tidak menembus limit.
+mobile
+docs
+supabase
+.git
+.vercel
+*.md
+ESC_Siantan_Finance_Handover.zip
+**/node_modules
+website/.next
+.next
