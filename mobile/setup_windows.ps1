@@ -22,6 +22,19 @@ flutter --version
 Write-Host "`n[2/4] Membuat folder platform Android..." -ForegroundColor Yellow
 flutter create --org com.escsiantan --project-name esc_siantan_finance --platforms=android .
 
+# 2b) Polish: nama aplikasi di home screen + workaround build Kotlin (Windows)
+$manifest = "android\app\src\main\AndroidManifest.xml"
+if (Test-Path $manifest) {
+  (Get-Content $manifest -Raw) -replace 'android:label="esc_siantan_finance"', 'android:label="ESC Siantan Finance"' |
+    Set-Content $manifest -Encoding UTF8
+}
+$gp = "android\gradle.properties"
+if (Test-Path $gp) {
+  if ((Get-Content $gp -Raw) -notmatch 'kotlin\.incremental=false') {
+    Add-Content $gp "`nkotlin.incremental=false`nkotlin.compiler.execution.strategy=in-process"
+  }
+}
+
 # 3) Ambil dependency
 Write-Host "`n[3/4] Mengambil dependency (flutter pub get)..." -ForegroundColor Yellow
 flutter pub get
