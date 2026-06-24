@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Sidebar from '@/components/Sidebar'
 import { supabase, formatRupiah, formatTanggal, OFFERING_LABELS, type Persembahan } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
 
@@ -40,9 +39,7 @@ export default function PersembahanPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Persembahan</h1>
@@ -89,7 +86,6 @@ export default function PersembahanPage() {
             </tbody>
           </table>
         </div>
-      </main>
-    </div>
+    </main>
   )
 }

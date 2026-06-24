@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Sidebar from '@/components/Sidebar'
 import { supabase, formatRupiah, formatTanggal, type SesiIbadah } from '@/lib/supabase'
 
 const STATUS_BADGE: Record<string, { c: string; t: string }> = {
@@ -25,9 +24,7 @@ export default function SesiIbadahPage() {
   }, [])
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Sesi Ibadah</h1>
           <p className="text-gray-500 mt-1">Rekonsiliasi kas pasca-ibadah (dari aplikasi mobile)</p>
@@ -60,7 +57,6 @@ export default function SesiIbadahPage() {
             </tbody>
           </table>
         </div>
-      </main>
-    </div>
+    </main>
   )
 }

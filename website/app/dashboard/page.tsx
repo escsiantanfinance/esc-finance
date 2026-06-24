@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Sidebar from '@/components/Sidebar'
 import StatsCard from '@/components/StatsCard'
 import { supabase, formatRupiah, type DashboardSummary, type Pengeluaran } from '@/lib/supabase'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -30,9 +29,7 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">Ringkasan keuangan ESC Siantan</p>
@@ -90,7 +87,6 @@ export default function DashboardPage() {
             </div>
           </>
         )}
-      </main>
-    </div>
+    </main>
   )
 }

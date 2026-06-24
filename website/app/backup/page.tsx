@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Sidebar from '@/components/Sidebar'
 import { supabase, formatTanggal, type LogBackup } from '@/lib/supabase'
 
 function fmtSize(b?: number) { if (!b) return '-'; return (b / 1024 / 1024).toFixed(1) + ' MB' }
@@ -52,20 +51,16 @@ export default function BackupPage() {
     else { setPreview(null); setFile(null); setMsg('✓ Data berhasil dipulihkan'); loadLogs() }
   }
 
-  if (allowed === null) return <div className="flex min-h-screen bg-gray-50"><Sidebar /><main className="flex-1 p-8 text-gray-400">Memuat...</main></div>
+  if (allowed === null) return <main className="flex-1 p-8 text-gray-400">Memuat...</main>
   if (!allowed) return (
-    <div className="flex min-h-screen bg-gray-50"><Sidebar />
-      <main className="flex-1 p-8"><div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 max-w-lg">
-        <h1 className="font-bold text-lg text-amber-800">🔒 Akses dibatasi</h1>
-        <p className="text-amber-700 text-sm mt-1">Halaman Backup &amp; Recovery hanya untuk Super Admin / Gembala Senior.</p>
-      </div></main>
-    </div>
+    <main className="flex-1 p-8"><div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 max-w-lg">
+      <h1 className="font-bold text-lg text-amber-800">🔒 Akses dibatasi</h1>
+      <p className="text-amber-700 text-sm mt-1">Halaman Backup &amp; Recovery hanya untuk Super Admin / Gembala Senior.</p>
+    </div></main>
   )
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Backup &amp; Recovery</h1>
@@ -115,7 +110,6 @@ export default function BackupPage() {
             {preview && <button onClick={() => doRestore(true)} disabled={busy} className="bg-red-600 text-white rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50">Konfirmasi pulihkan</button>}
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   )
 }

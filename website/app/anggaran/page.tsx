@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Sidebar from '@/components/Sidebar'
 import { supabase, formatRupiah, type Anggaran } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
 
@@ -41,9 +40,7 @@ export default function AnggaranPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <div className="mb-6 flex items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Anggaran</h1>
@@ -87,7 +84,6 @@ export default function AnggaranPage() {
             </div>
           ))
         }
-      </main>
-    </div>
+    </main>
   )
 }

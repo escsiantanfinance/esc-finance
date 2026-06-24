@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Sidebar from '@/components/Sidebar'
 import { supabase, formatRupiah, formatTanggal, type Akun } from '@/lib/supabase'
 
 type Line = { akun_id: string; debit: string; kredit: string }
@@ -54,9 +53,7 @@ export default function JurnalPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Jurnal Umum</h1>
@@ -125,7 +122,6 @@ export default function JurnalPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </main>
   )
 }

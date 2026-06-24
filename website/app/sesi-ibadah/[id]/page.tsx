@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import Sidebar from '@/components/Sidebar'
 import { supabase, formatRupiah, formatTanggal, OFFERING_LABELS, type SesiIbadah, type SesiPecahan, type Persembahan } from '@/lib/supabase'
 
 export default function SesiDetailPage() {
@@ -27,15 +26,13 @@ export default function SesiDetailPage() {
     load()
   }, [id])
 
-  if (loading) return <div className="flex min-h-screen bg-gray-50"><Sidebar /><main className="flex-1 p-8 text-gray-400">Memuat...</main></div>
-  if (!sesi) return <div className="flex min-h-screen bg-gray-50"><Sidebar /><main className="flex-1 p-8 text-gray-400">Sesi tidak ditemukan.</main></div>
+  if (loading) return <main className="flex-1 p-8 text-gray-400">Memuat...</main>
+  if (!sesi) return <main className="flex-1 p-8 text-gray-400">Sesi tidak ditemukan.</main>
 
   const match = Number(sesi.selisih) === 0
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <Link href="/sesi-ibadah" className="text-gray-500 text-sm hover:underline">← Kembali ke daftar sesi</Link>
         <div className="mt-3 mb-6 flex items-center justify-between gap-4 flex-wrap">
           <div>
@@ -89,8 +86,7 @@ export default function SesiDetailPage() {
               {sesi.signed_at ? ` (${formatTanggal(sesi.signed_at)})` : ''}</p>
           )}
         </div>
-      </main>
-    </div>
+    </main>
   )
 }
 

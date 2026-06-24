@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Sidebar from '@/components/Sidebar'
 import { supabase, formatRupiah, type Kas, type Akun } from '@/lib/supabase'
 
 const TIPE_BADGE: Record<string, string> = {
@@ -50,9 +49,7 @@ export default function AkunKasPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Akun &amp; Kas</h1>
@@ -120,7 +117,6 @@ export default function AkunKasPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </main>
   )
 }

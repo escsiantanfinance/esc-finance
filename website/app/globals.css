@@ -9,3 +9,25 @@
   --danger: #DC2626;
   --warning: #D97706;
 }
+
+html { scroll-behavior: smooth; }
+body { background: #f1f5f9; color: #0f172a; }
+
+/* Transisi konten antar-halaman (halus, bukan "glitch") */
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.animate-fadein { animation: fadein 0.28s ease-out; }
+
+/* Scrollbar lebih rapi */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Kartu & elemen umum sedikit lebih halus */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadein { animation: none; }
+  html { scroll-behavior: auto; }
+}

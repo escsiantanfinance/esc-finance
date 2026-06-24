@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Sidebar from '@/components/Sidebar'
 import { supabase } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
 
@@ -48,9 +47,7 @@ export default function PerpuluhanPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-8">
+    <main className="flex-1 p-8">
         <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Pelacakan Perpuluhan</h1>
@@ -121,7 +118,6 @@ export default function PerpuluhanPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </main>
   )
 }
