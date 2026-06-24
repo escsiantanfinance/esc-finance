@@ -9,41 +9,56 @@ Gembala & Saksi → kunci & sinkron ke Supabase.
 > di langkah setup. Kode ini ditulis tanpa Flutter SDK di lingkungan dev, jadi
 > jalankan `flutter analyze` sekali setelah setup untuk memastikan bersih.
 
-## Prasyarat
-- Flutter SDK 3.3+ (`flutter --version`)
-- Android Studio / Xcode untuk emulator/perangkat
-- Project Supabase yang sudah dijalankan `supabase/schema.sql`
+## Prasyarat (sekali pasang di komputer Windows)
+1. **Flutter SDK 3.3+** — unduh & ikuti: https://docs.flutter.dev/get-started/install/windows
+   Pastikan `flutter --version` jalan di PowerShell.
+2. **Android Studio** — untuk Android SDK + emulator. Setelah instal, buka sekali,
+   lalu jalankan `flutter doctor --android-licenses` dan terima semua lisensi.
+3. **Perangkat**: HP Android (aktifkan *Developer options* → *USB debugging*, sambungkan via USB)
+   **atau** emulator dari Android Studio.
+4. **Supabase** sudah dijalankan `supabase/schema.sql` (lihat `../SETUP_GUIDE.md`).
 
-## Langkah setup
+> Cek kesiapan dengan: `flutter doctor` — semua harus centang hijau (kecuali iOS bila di Windows).
+
+## Langkah setup — cara mudah (skrip otomatis)
+Dari folder `mobile`, di PowerShell:
+```powershell
+# 1) Setup sekali: buat folder Android + dependency + cek kode
+powershell -ExecutionPolicy Bypass -File .\setup_windows.ps1
+
+# 2) Jalankan ke HP/emulator (kredensial Supabase sudah terisi)
+powershell -ExecutionPolicy Bypass -File .\run_mobile.ps1
+```
+
+## Langkah setup — cara manual
 ```bash
 cd mobile
-
-# 1) Generate folder platform (android/ios) tanpa menimpa lib/ & pubspec.yaml
-flutter create .
-
-# 2) Ambil dependency
+flutter create --org com.escsiantan --project-name esc_siantan_finance --platforms=android .
 flutter pub get
-
-# 3) Jalankan dengan kredensial Supabase (lihat Settings → API)
 flutter run \
-  --dart-define=SUPABASE_URL=https://PROJECT_ID.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=eyJhbGciOi....anon_key
+  --dart-define=SUPABASE_URL=https://vtupgtrlsydiunpiqiui.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<ANON_KEY dari Supabase → Settings → API>
 ```
 
 > Alternatif: edit langsung `defaultValue` di `lib/core/config.dart` bila tidak
-> mau memakai `--dart-define`.
+> mau memakai `--dart-define`. `flutter create .` **tidak** menimpa `lib/` & `pubspec.yaml`.
 
 ## Supabase Storage
 Buat bucket **`signatures`** dan set **Public** (agar gambar tanda tangan tampil
 di Web Dashboard via URL publik). Bucket `backups` cukup di sisi web.
 
 ## Build APK untuk distribusi
+Cara mudah: `powershell -ExecutionPolicy Bypass -File .\build_apk.ps1`
+
+Manual:
 ```bash
 flutter build apk --release \
-  --dart-define=SUPABASE_URL=https://PROJECT_ID.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=eyJ....anon_key
+  --dart-define=SUPABASE_URL=https://vtupgtrlsydiunpiqiui.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<ANON_KEY>
 # Output: build/app/outputs/flutter-apk/app-release.apk
 ```
+APK ini bisa dikirim ke HP (mis. via WhatsApp) lalu diinstal langsung — berguna
+untuk mendemokan aplikasi mobile ke pembeli tanpa perlu PC.
 
 ## Struktur kode
 ```
