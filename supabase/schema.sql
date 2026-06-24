@@ -561,14 +561,38 @@ JOIN akun a ON a.id = d.akun_id
 WHERE a.tipe IN ('pendapatan','beban')
 GROUP BY a.id, a.kode_akun, a.nama_akun, a.tipe, DATE_TRUNC('month', j.tanggal), EXTRACT(YEAR FROM j.tanggal);
 
--- Neraca (Balance Sheet) — saldo berjalan per akun
+-- Neraca (Balance Sheet) — saldo berjalan per akun.
+-- Dirancang agar SELALU seimbang (Aset = Kewajiban + Ekuitas) dan cocok dengan
+-- saldo kas riil, dengan dua komponen ekuitas turunan:
+--   (a) Saldo Dana Awal  = lawan akuntansi dari saldo_awal kas (modal pembuka)
+--   (b) Surplus Berjalan = akumulasi pendapatan - beban (belum di-closing ke dana)
+-- Saldo awal kas dimasukkan ke sisi aset agar Total Aset = total saldo_saat_ini.
 CREATE VIEW v_neraca AS
 SELECT a.id AS akun_id, a.kode_akun, a.nama_akun, a.tipe, a.saldo_normal,
-       CASE WHEN a.saldo_normal='debit' THEN COALESCE(SUM(d.debit - d.kredit),0)
-            ELSE COALESCE(SUM(d.kredit - d.debit),0) END AS saldo
+       (CASE WHEN a.saldo_normal='debit' THEN COALESCE(SUM(d.debit - d.kredit),0)
+             ELSE COALESCE(SUM(d.kredit - d.debit),0) END)
+       + COALESCE((SELECT SUM(k.saldo_awal) FROM kas k WHERE k.akun_id = a.id),0) AS saldo
 FROM akun a LEFT JOIN jurnal_umum_detail d ON d.akun_id = a.id
 WHERE a.tipe IN ('aset','kewajiban','ekuitas') AND a.is_header = false
-GROUP BY a.id, a.kode_akun, a.nama_akun, a.tipe, a.saldo_normal ORDER BY a.kode_akun;
+GROUP BY a.id, a.kode_akun, a.nama_akun, a.tipe, a.saldo_normal
+UNION ALL
+-- Hanya saldo_awal kas yang tertaut akun aset (sama dgn yang masuk sisi aset),
+-- supaya sisi aset & ekuitas selalu cocok meski ada kas tanpa tautan COA.
+SELECT '00000000-0000-0000-0000-000000000002'::uuid, '3-9000', 'Saldo Dana Awal',
+       'ekuitas'::akun_tipe, 'kredit'::saldo_normal_tipe,
+       COALESCE((SELECT SUM(k.saldo_awal) FROM kas k
+                 JOIN akun a ON a.id = k.akun_id
+                 WHERE a.tipe='aset' AND a.is_header=false),0)
+WHERE COALESCE((SELECT SUM(k.saldo_awal) FROM kas k
+                JOIN akun a ON a.id = k.akun_id
+                WHERE a.tipe='aset' AND a.is_header=false),0) <> 0
+UNION ALL
+SELECT '00000000-0000-0000-0000-000000000001'::uuid, '3-9999', 'Surplus/(Defisit) Berjalan',
+       'ekuitas'::akun_tipe, 'kredit'::saldo_normal_tipe,
+       COALESCE((SELECT SUM(d.kredit - d.debit) FROM jurnal_umum_detail d
+                 JOIN akun a ON a.id = d.akun_id WHERE a.tipe IN ('pendapatan','beban')),0)
+WHERE COALESCE((SELECT SUM(d.kredit - d.debit) FROM jurnal_umum_detail d
+                JOIN akun a ON a.id = d.akun_id WHERE a.tipe IN ('pendapatan','beban')),0) <> 0;
 
 -- Arus Kas (Cash Flow) — mutasi akun kas/bank per bulan
 CREATE VIEW v_arus_kas AS

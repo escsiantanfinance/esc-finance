@@ -38,6 +38,8 @@ export default function LaporanPage() {
   const kewajiban = neraca.filter(r => r.tipe === 'kewajiban')
   const ekuitas = neraca.filter(r => r.tipe === 'ekuitas')
   const totalAset = aset.reduce((s, r) => s + Number(r.saldo), 0)
+  const totalKewajibanEkuitas = kewajiban.reduce((s, r) => s + Number(r.saldo), 0) + ekuitas.reduce((s, r) => s + Number(r.saldo), 0)
+  const neracaSeimbang = Math.abs(totalAset - totalKewajibanEkuitas) < 1
 
   function handleExport() {
     exportSheets([
@@ -85,19 +87,23 @@ export default function LaporanPage() {
 
         {/* NERACA */}
         {tab === 'neraca' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 max-w-4xl">
-            <div className="bg-white rounded-2xl shadow-sm border p-6">
-              <h2 className="font-semibold text-lg mb-4">Aset</h2>
-              {aset.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
-              <Row label="Total Aset" value={totalAset} bold color="text-blue-700" />
+          <div className="max-w-4xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="bg-white rounded-2xl shadow-sm border p-6">
+                <h2 className="font-semibold text-lg mb-4">Aset</h2>
+                {aset.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
+                <Row label="Total Aset" value={totalAset} bold color="text-blue-700" />
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border p-6">
+                <h2 className="font-semibold text-lg mb-4">Kewajiban &amp; Ekuitas</h2>
+                {kewajiban.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
+                {ekuitas.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
+                <Row label="Total Kewajiban + Ekuitas" value={totalKewajibanEkuitas} bold color="text-blue-700" />
+              </div>
             </div>
-            <div className="bg-white rounded-2xl shadow-sm border p-6">
-              <h2 className="font-semibold text-lg mb-4">Kewajiban &amp; Ekuitas</h2>
-              {kewajiban.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
-              {ekuitas.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
-              <Row label="Total Kewajiban + Ekuitas"
-                value={kewajiban.reduce((s, r) => s + Number(r.saldo), 0) + ekuitas.reduce((s, r) => s + Number(r.saldo), 0)}
-                bold color="text-blue-700" />
+            <div className={`mt-4 flex items-center justify-between rounded-xl px-5 py-3 text-sm font-semibold ${neracaSeimbang ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              <span>{neracaSeimbang ? '✓ Neraca seimbang (Aset = Kewajiban + Ekuitas)' : '✗ Neraca tidak seimbang — periksa jurnal'}</span>
+              {!neracaSeimbang && <span>Selisih {formatRupiah(totalAset - totalKewajibanEkuitas)}</span>}
             </div>
           </div>
         )}

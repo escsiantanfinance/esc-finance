@@ -37,7 +37,7 @@ flutter create --org com.escsiantan --project-name esc_siantan_finance --platfor
 flutter pub get
 flutter run \
   --dart-define=SUPABASE_URL=https://vtupgtrlsydiunpiqiui.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=<ANON_KEY dari Supabase → Settings → API>
+  --dart-define=SUPABASE_ANON_KEY=<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dXBndHJsc3lkaXVucGlxaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMTU1MzYsImV4cCI6MjA5Nzc5MTUzNn0.2r4JjfPYTITgdw5-0hDLxc4QonIV_SnGOBoETCJyI50>
 ```
 
 > Alternatif: edit langsung `defaultValue` di `lib/core/config.dart` bila tidak

@@ -105,7 +105,6 @@ class FinanceRepository {
     await _db.storage.from(AppConfig.signaturesBucket).uploadBinary(
           path,
           bytes,
-          fileOptions: const FileOptions(contentType: 'image/png', upsert: true),
         );
     return _db.storage.from(AppConfig.signaturesBucket).getPublicUrl(path);
   }
