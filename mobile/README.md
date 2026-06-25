@@ -43,9 +43,12 @@ flutter run \
 > Alternatif: edit langsung `defaultValue` di `lib/core/config.dart` bila tidak
 > mau memakai `--dart-define`. `flutter create .` **tidak** menimpa `lib/` & `pubspec.yaml`.
 
-## Supabase Storage
-Buat bucket **`signatures`** dan set **Public** (agar gambar tanda tangan tampil
-di Web Dashboard via URL publik). Bucket `backups` cukup di sisi web.
+## Supabase Storage (WAJIB sebelum pakai tanda tangan)
+Jalankan **`../supabase/storage_setup.sql`** di Supabase SQL Editor (sekali).
+Skrip itu membuat bucket `signatures`, `bukti`, `backups` **beserta RLS policy
+upload**-nya. Tanpa policy ini, upload tanda tangan dari mobile gagal `403`
+sehingga sesi tidak bisa dikunci. (Bucket publik saja tidak cukup — INSERT ke
+`storage.objects` tetap perlu policy.)
 
 ## Build APK untuk distribusi
 Cara mudah: `powershell -ExecutionPolicy Bypass -File .\build_apk.ps1`
