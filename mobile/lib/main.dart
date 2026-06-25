@@ -28,7 +28,7 @@ class ESCFinanceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ESC Siantan Finance',
+      title: 'ESC Finance',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       home: const RootGate(),

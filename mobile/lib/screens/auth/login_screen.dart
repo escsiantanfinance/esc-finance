@@ -44,9 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('⛪', style: TextStyle(fontSize: 56)),
+                const Text('💰', style: TextStyle(fontSize: 56)),
                 const SizedBox(height: 12),
-                const Text('ESC Siantan Finance',
+                const Text('ESC Finance',
                     style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
                 const Text('Aplikasi Tim Finance',
