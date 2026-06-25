@@ -13,15 +13,24 @@ export default function SesiIbadahPage() {
   const [data, setData] = useState<SesiIbadah[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function load() {
-      const { data: rows } = await supabase.from('sesi_ibadah')
-        .select('*, kas:kas_id(nama)').order('tanggal', { ascending: false }).limit(50)
-      if (rows) setData(rows as any)
-      setLoading(false)
-    }
+  async function load() {
+    const { data: rows } = await supabase.from('sesi_ibadah')
+      .select('*, kas:kas_id(nama)').order('tanggal', { ascending: false }).limit(50)
+    if (rows) setData(rows as any)
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+
+  async function delSesi(s: SesiIbadah) {
+    if (s.status === 'signed_locked') { alert('Sesi yang sudah terkunci tidak bisa dihapus.'); return }
+    if (!confirm(`Hapus sesi "${s.jenis_ibadah}" (${s.tanggal})? Denominasi & kategori sesi ini ikut terhapus. Permanen.`)) return
+    // hapus persembahan sesi (un-post jurnal + kembalikan saldo), lalu sesi (cascade pecahan)
+    const { error: e1 } = await supabase.from('persembahan').delete().eq('sesi_id', s.id)
+    if (e1) { alert('Gagal hapus persembahan sesi: ' + e1.message); return }
+    const { error: e2 } = await supabase.from('sesi_ibadah').delete().eq('id', s.id)
+    if (e2) { alert('Gagal hapus sesi: ' + e2.message); return }
     load()
-  }, [])
+  }
 
   return (
     <main className="flex-1 p-8">
@@ -50,7 +59,12 @@ export default function SesiIbadahPage() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${match ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{match ? 'MATCH' : 'MISMATCH'}</span>
                       </td>
                       <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[s.status]?.c}`}>{STATUS_BADGE[s.status]?.t}</span></td>
-                      <td className="px-4 py-3 text-right"><Link href={`/sesi-ibadah/${s.id}`} className="text-blue-700 font-medium text-xs hover:underline">Lihat →</Link></td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <Link href={`/sesi-ibadah/${s.id}`} className="text-blue-700 font-medium text-xs hover:underline">Lihat</Link>
+                        {s.status !== 'signed_locked' && (
+                          <button onClick={() => delSesi(s)} className="text-red-500 font-medium text-xs hover:underline ml-3">Hapus</button>
+                        )}
+                      </td>
                     </tr>
                   )
                 })}

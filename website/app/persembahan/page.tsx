@@ -14,7 +14,7 @@ export default function PersembahanPage() {
       const start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       const { data: rows } = await supabase
         .from('persembahan')
-        .select('*, kas:kas_id(nama), anggota:anggota_id(nama)')
+        .select('*, kas:kas_id(nama), anggota:anggota_id(nama), pencatat:dicatat_oleh(full_name)')
         .gte('tanggal', start)
         .order('tanggal', { ascending: false })
       if (rows) { setData(rows as any); setTotal(rows.reduce((s, r: any) => s + Number(r.jumlah), 0)) }
@@ -30,6 +30,7 @@ export default function PersembahanPage() {
         Jenis: OFFERING_LABELS[r.jenis] ?? r.jenis,
         Jumlah: r.jumlah,
         Pemberi: r.nama_pemberi ?? 'Anonim',
+        'Diinput oleh': (r as any).pencatat?.full_name ?? '-',
         Kas: r.kas?.nama ?? '-',
         Metode: r.metode_pembayaran,
         Terverifikasi: r.is_verified ? 'Ya' : 'Belum',
@@ -58,22 +59,23 @@ export default function PersembahanPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {['Tanggal', 'Jenis', 'Jumlah', 'Pemberi', 'Kas', 'Metode', 'Status'].map(h => (
+                {['Tanggal', 'Jenis', 'Jumlah', 'Pemberi', 'Diinput oleh', 'Kas', 'Metode', 'Status'].map(h => (
                   <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan={7} className="text-center py-8 text-gray-400">Memuat data...</td></tr>
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Memuat data...</td></tr>
               ) : data.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-8 text-gray-400">Belum ada data</td></tr>
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Belum ada data</td></tr>
               ) : data.map(row => (
                 <tr key={row.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">{formatTanggal(row.tanggal)}</td>
                   <td className="px-4 py-3">{OFFERING_LABELS[row.jenis] ?? row.jenis}</td>
                   <td className="px-4 py-3 font-semibold text-green-700">{formatRupiah(row.jumlah)}</td>
                   <td className="px-4 py-3 text-gray-500">{row.nama_pemberi ?? 'Anonim'}</td>
+                  <td className="px-4 py-3 text-gray-600">{(row as any).pencatat?.full_name ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500">{row.kas?.nama ?? '-'}</td>
                   <td className="px-4 py-3 capitalize">{row.metode_pembayaran}</td>
                   <td className="px-4 py-3">

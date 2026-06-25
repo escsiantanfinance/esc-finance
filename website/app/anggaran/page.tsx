@@ -17,6 +17,7 @@ export default function AnggaranPage() {
   const [form, setForm] = useState({ ...emptyForm })
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  const [editId, setEditId] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -32,11 +33,10 @@ export default function AnggaranPage() {
       .then(({ data }) => setKategori(data ?? []))
   }, [])
 
-  async function addAnggaran() {
+  async function saveAnggaran() {
     if (!form.nama_pos || !form.jumlah_dianggarkan || Number(form.jumlah_dianggarkan) < 0) { setMsg('Nama pos & jumlah wajib diisi'); return }
     setSaving(true); setMsg('')
-    const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('anggaran').insert({
+    const payload = {
       tahun,
       bulan: form.bulan ? Number(form.bulan) : null,
       kategori_id: form.kategori_id || null,
@@ -44,11 +44,38 @@ export default function AnggaranPage() {
       jumlah_dianggarkan: Number(form.jumlah_dianggarkan),
       keterangan: form.keterangan || null,
       periode: form.bulan ? 'bulanan' : 'tahunan',
-      dibuat_oleh: user?.id ?? null,
-    })
+    }
+    let error
+    if (editId) {
+      ({ error } = await supabase.from('anggaran').update(payload).eq('id', editId))
+    } else {
+      const { data: { user } } = await supabase.auth.getUser()
+      ;({ error } = await supabase.from('anggaran').insert({ ...payload, dibuat_oleh: user?.id ?? null }))
+    }
     setSaving(false)
     if (error) { setMsg('Gagal: ' + error.message); return }
-    setShow(false); setForm({ ...emptyForm }); load()
+    setShow(false); setForm({ ...emptyForm }); setEditId(null); load()
+  }
+
+  async function openEdit(row: any) {
+    const { data: a } = await supabase.from('anggaran').select('*').eq('id', row.anggaran_id).single()
+    if (!a) { setMsg('Data tidak ditemukan'); return }
+    setEditId(a.id)
+    setForm({
+      bulan: a.bulan ? String(a.bulan) : '',
+      kategori_id: a.kategori_id ?? '',
+      nama_pos: a.nama_pos,
+      jumlah_dianggarkan: String(a.jumlah_dianggarkan),
+      keterangan: a.keterangan ?? '',
+    })
+    setMsg(''); setShow(true)
+  }
+
+  async function delAnggaran(id: string, nama: string) {
+    if (!confirm(`Hapus pos anggaran "${nama}"? Tindakan ini permanen.`)) return
+    const { error } = await supabase.from('anggaran').delete().eq('id', id)
+    if (error) { setMsg('Gagal hapus: ' + error.message); return }
+    load()
   }
 
   const totalAnggaran = data.reduce((s, r) => s + Number(r.jumlah_dianggarkan), 0)
@@ -94,7 +121,7 @@ export default function AnggaranPage() {
             <select value={tahun} onChange={e => setTahun(Number(e.target.value))} className="border rounded-xl px-3 py-1.5 text-sm">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            <button onClick={() => { setForm({ ...emptyForm }); setMsg(''); setShow(true) }} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-1.5 text-sm font-semibold">+ Tambah</button>
+            <button onClick={() => { setForm({ ...emptyForm }); setEditId(null); setMsg(''); setShow(true) }} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-1.5 text-sm font-semibold">+ Tambah</button>
           </div>
         </div>
 
@@ -138,6 +165,7 @@ export default function AnggaranPage() {
                       <th className="text-right px-3 py-2 font-medium">Realisasi</th>
                       <th className="text-right px-3 py-2 font-medium">Sisa</th>
                       <th className="px-5 py-2 font-medium w-40">Serapan</th>
+                      <th className="px-3 py-2 font-medium text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -162,6 +190,10 @@ export default function AnggaranPage() {
                               <span className={`text-xs font-medium w-10 text-right ${over ? 'text-red-600' : 'text-gray-500'}`}>{pct}%</span>
                             </div>
                           </td>
+                          <td className="px-3 py-3 text-right whitespace-nowrap">
+                            <button onClick={() => openEdit(row)} className="text-blue-600 hover:underline text-xs font-medium mr-3">Edit</button>
+                            <button onClick={() => delAnggaran(row.anggaran_id, row.nama_pos)} className="text-red-500 hover:underline text-xs font-medium">Hapus</button>
+                          </td>
                         </tr>
                       )
                     })}
@@ -174,9 +206,9 @@ export default function AnggaranPage() {
         <p className="text-xs text-gray-400 mt-3">ℹ️ Realisasi dihitung otomatis dari pengeluaran berstatus <b>disetujui</b> pada kategori & periode yang sama. Baris merah = melebihi pagu.</p>
 
         {show && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setShow(false)}>
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => { setShow(false); setEditId(null) }}>
             <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-4">Tambah Anggaran {tahun}</h3>
+              <h3 className="font-bold text-lg mb-4">{editId ? 'Edit' : 'Tambah'} Anggaran {tahun}</h3>
               <div className="space-y-3">
                 <label className="text-sm block">Periode bulan
                   <select value={form.bulan} onChange={e => setForm({ ...form, bulan: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
@@ -202,8 +234,8 @@ export default function AnggaranPage() {
               </div>
               {msg && <p className="text-xs mt-3 text-red-600">{msg}</p>}
               <div className="flex gap-2 mt-5">
-                <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={addAnggaran} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
+                <button onClick={() => { setShow(false); setEditId(null) }} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
+                <button onClick={saveAnggaran} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : (editId ? 'Simpan perubahan' : 'Simpan')}</button>
               </div>
             </div>
           </div>

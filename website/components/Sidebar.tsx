@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase, type UserRole } from '@/lib/supabase'
 
-type Visibility = 'all' | 'staff' | 'super'
+type Visibility = 'all' | 'staff' | 'admin' | 'super'
 type NavItem = { href: string; label: string; icon: string; vis: Visibility }
 
 const navGroups: { title: string; items: NavItem[] }[] = [
@@ -30,7 +30,10 @@ const navGroups: { title: string; items: NavItem[] }[] = [
   },
   {
     title: 'Sistem',
-    items: [{ href: '/backup', label: 'Backup', icon: '🗄️', vis: 'super' }],
+    items: [
+      { href: '/users', label: 'Kelola Pengguna', icon: '👥', vis: 'admin' },
+      { href: '/backup', label: 'Backup', icon: '🗄️', vis: 'super' },
+    ],
   },
 ]
 
@@ -63,6 +66,7 @@ export default function Sidebar() {
   function canSee(vis: Visibility) {
     if (vis === 'all') return true
     if (vis === 'staff') return isStaff
+    if (vis === 'admin') return role === 'admin'
     if (vis === 'super') return isSuper
     return false
   }

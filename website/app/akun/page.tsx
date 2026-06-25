@@ -17,6 +17,7 @@ export default function AkunKasPage() {
   const [saving, setSaving] = useState(false)
   const [edit, setEdit] = useState<Kas | null>(null)
   const [editForm, setEditForm] = useState({ nama: '', tipe: 'tunai', nomor_rekening: '', akun_id: '', saldo_awal: '', is_aktif: true })
+  const [isSuper, setIsSuper] = useState(false)
 
   async function load() {
     const [{ data: k }, { data: a }] = await Promise.all([
@@ -27,7 +28,29 @@ export default function AkunKasPage() {
     if (a) setAkun(a as any)
     setLoading(false)
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const { data: p } = await supabase.from('profiles').select('is_super_admin').eq('id', user.id).single()
+      setIsSuper(!!p?.is_super_admin)
+    })
+  }, [])
+
+  async function delKas() {
+    if (!edit) return
+    if (!confirm(`Hapus kas "${edit.nama}"? Hanya bisa bila tidak punya transaksi. Tindakan permanen.`)) return
+    setSaving(true)
+    const { error } = await supabase.from('kas').delete().eq('id', edit.id)
+    setSaving(false)
+    if (error) {
+      alert(/foreign key|violates|constraint/i.test(error.message)
+        ? 'Kas ini masih punya transaksi (persembahan/pengeluaran), jadi tidak bisa dihapus. Nonaktifkan saja lewat centang "Kas aktif".'
+        : 'Gagal menghapus: ' + error.message)
+      return
+    }
+    setEdit(null); load()
+  }
 
   function openEdit(k: Kas) {
     setEdit(k)
@@ -175,9 +198,11 @@ export default function AkunKasPage() {
                 <label className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={editForm.is_aktif} onChange={e => setEditForm({ ...editForm, is_aktif: e.target.checked })} /> Kas aktif (hilangkan centang untuk menonaktifkan)</label>
               </div>
               <div className="flex gap-2 mt-5">
+                {isSuper && <button onClick={delKas} disabled={saving} className="border border-red-300 text-red-600 rounded-xl px-4 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-60">🗑 Hapus</button>}
                 <button onClick={() => setEdit(null)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
                 <button onClick={saveEdit} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan perubahan'}</button>
               </div>
+              {isSuper && <p className="text-[11px] text-gray-400 mt-2">Hapus hanya untuk Super Admin & kas tanpa transaksi. Untuk kas berisi data, gunakan nonaktifkan.</p>}
             </div>
           </div>
         )}
