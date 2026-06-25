@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import '../data/finance_repository.dart';
 import '../models/models.dart';
 
@@ -30,8 +31,14 @@ class AuthProvider extends ChangeNotifier {
       profile = await _repo.currentProfile();
       notifyListeners();
       return true;
+    } on AuthException catch (e) {
+      error = e.message.toLowerCase().contains('invalid')
+          ? 'Email atau kata sandi salah.'
+          : 'Gagal masuk: ${e.message}';
+      notifyListeners();
+      return false;
     } catch (e) {
-      error = 'Email atau kata sandi salah.';
+      error = 'Tidak bisa terhubung: $e';
       notifyListeners();
       return false;
     }

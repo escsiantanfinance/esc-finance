@@ -23,12 +23,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     setState(() => _loading = true);
-    final ok = await context.read<AuthProvider>().login(_email.text, _password.text);
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.login(_email.text.trim(), _password.text);
     if (!mounted) return;
     setState(() => _loading = false);
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email atau kata sandi salah.'), backgroundColor: AppColors.danger),
+        SnackBar(content: Text(auth.error ?? 'Email atau kata sandi salah.'), backgroundColor: AppColors.danger),
       );
     }
   }

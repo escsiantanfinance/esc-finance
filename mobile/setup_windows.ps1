@@ -25,8 +25,13 @@ flutter create --org com.escsiantan --project-name esc_siantan_finance --platfor
 # 2b) Polish: nama aplikasi di home screen + workaround build Kotlin (Windows)
 $manifest = "android\app\src\main\AndroidManifest.xml"
 if (Test-Path $manifest) {
-  (Get-Content $manifest -Raw) -replace 'android:label="esc_siantan_finance"', 'android:label="ESC Finance"' |
-    Set-Content $manifest -Encoding UTF8
+  $m = Get-Content $manifest -Raw
+  $m = $m -replace 'android:label="esc_siantan_finance"', 'android:label="ESC Finance"'
+  # WAJIB: izin INTERNET untuk build rilis (Flutter hanya menambah ini di debug).
+  if ($m -notmatch 'android\.permission\.INTERNET') {
+    $m = $m -replace '(<manifest[^>]*>)', "`$1`r`n    <uses-permission android:name=`"android.permission.INTERNET`"/>"
+  }
+  $m | Set-Content $manifest -Encoding UTF8
 }
 # Generate ikon launcher (church + koin Rp) bila asset & paket tersedia
 if (Test-Path "assets\icon\esc_icon_full.png") {
