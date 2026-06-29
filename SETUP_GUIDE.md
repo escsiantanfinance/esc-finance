@@ -1,4 +1,4 @@
-# ESC Siantan Finance — Panduan Setup (v2.1)
+# ESC Siantan Finance — Panduan Setup (v3.0)
 
 Panduan ringkas. Untuk arsitektur & cara kerja lengkap lihat **`PANDUAN_SISTEM.md`**.
 
@@ -20,20 +20,33 @@ ESC Finance Apps/
 
 ## LANGKAH 1 — Supabase
 1. Buat akun & project baru di [supabase.com](https://supabase.com) (region Singapore).
-2. **SQL Editor** → tempel seluruh isi `supabase/schema.sql` → **Run**.
-3. **Storage** → buat bucket:
-   - `signatures` → **Public** (gambar tanda tangan).
+2. **SQL Editor** → tempel seluruh isi `supabase/schema.sql` → **Run**. Otomatis
+   menyeed 15 kas + 11 kategori persembahan (sesuaikan/tambah nanti lewat menu
+   **Kategori** & **Akun/Kas** di web bila perlu).
+3. **SQL Editor** → tempel seluruh isi `supabase/storage_setup.sql` → **Run**.
+   Membuat 3 bucket sekaligus RLS policy upload‑nya:
+   - `signatures` → **Public** (gambar tanda tangan, mobile).
+   - `bukti` → **Public** (foto nota pengeluaran, web).
    - `backups` → **Private** (file cadangan terenkripsi).
-4. Catat dari **Settings → API**: `Project URL`, `anon public`, `service_role`.
+   **Wajib** — tanpa policy ini, upload tanda tangan dari mobile gagal `403`
+   dan sesi tidak bisa dikunci.
+4. (Opsional, untuk coba‑coba) **SQL Editor** → `supabase/demo_seed.sql` → **Run**.
+5. Catat dari **Settings → API**: `Project URL`, `anon public`, `service_role`.
 
-## LANGKAH 2 — User pertama (Admin)
+## LANGKAH 2 — User pertama (Super Admin)
 **Authentication → Users → Add user** (isi email + password). Lalu di SQL Editor:
 ```sql
-UPDATE profiles SET role = 'admin', is_super_admin = true WHERE id = 'USER_ID_DISINI';
+UPDATE profiles SET role = 'admin', is_super_admin = true, boleh_approve_pengeluaran = true
+WHERE id = 'USER_ID_DISINI';
 ```
 > Catatan: pembuatan user otomatis membuat baris `profiles` (lewat trigger
 > `handle_new_user`). Trigger ini memakai `SET search_path = public` — wajib ada,
 > kalau tidak Supabase menolak dengan "Database error saving new user".
+
+Untuk bendahara berikutnya: buat user seperti di atas (role tetap default
+`majelis` atau set `bendahara`), lalu beri **akses kas** lewat menu **Pengguna**
+di web (atau SQL `INSERT INTO kas_akses (kas_id, user_id) VALUES (...)`) —
+tanpa ini, daftar kategori di mobile akan tampil kosong untuknya.
 
 ## LANGKAH 3 — Web Dashboard (Next.js)
 ```bash
@@ -69,26 +82,28 @@ Build APK: `flutter build apk --release --dart-define=...` (lihat README mobile)
 | Fitur | Mobile | Web Admin |
 |-------|:------:|:---------:|
 | Login | ✅ | ✅ |
-| Dashboard & saldo | ✅ | ✅ |
-| Sesi ibadah: denominasi → balancing → tanda tangan | ✅ | tinjau |
+| Dashboard & saldo (semua kas) | ✅ | ✅ |
+| Sesi ibadah: nama custom → denominasi → pilih kategori → kartu biru → 4 ttd | ✅ | tinjau |
 | Penyimpanan lokal (anti-hilang data) | ✅ | — |
+| Kategori persembahan custom per kas | lihat (terbatas akses) | ✅ (Super Admin) |
+| Akses kas per bendahara | terbatas | ✅ (Super Admin) |
 | Ajukan pengeluaran | ✅ | ✅ |
-| Setujui/tolak pengeluaran | — | ✅ |
-| Bagan Akun (COA) & multi-kas (+ tambah kas) | — | ✅ |
+| Setujui/tolak pengeluaran | — | ✅ (Super Admin / izin khusus) |
+| Bagan Akun (COA) & multi-kas (+ tambah/kurang kas) | — | ✅ (Super Admin) |
 | Jurnal umum manual | — | ✅ |
 | Anggaran | lihat | ✅ |
-| 3 laporan keuangan (Aktivitas/Neraca/Arus Kas) | ringkas | ✅ |
+| 3 laporan keuangan + rekap saldo kas | ringkas | ✅ |
 | Pelacakan perpuluhan volunteer | — | ✅ |
 | Export Excel | — | ✅ |
-| Backup & recovery | — | ✅ (super admin) |
+| Backup & recovery | — | ✅ (Super Admin) |
 
 ## Role & Hak Akses
 
 | Role | Hak |
 |------|-----|
-| `admin` (+ `is_super_admin`) | semua akses + restore data |
-| `bendahara` | input & kelola transaksi, kas, jurnal, setujui pengeluaran |
-| `majelis` | lihat data, ajukan pengeluaran |
+| `admin` (+ `is_super_admin`) | semua akses tanpa batas + restore data; `is_super_admin` mengatur kas/kategori/pengguna/akses |
+| `bendahara` | input & kelola transaksi **hanya untuk kas yang ditugaskan** (`kas_akses`) |
+| `majelis` | lihat data, ajukan pengeluaran; bisa diberi `boleh_approve_pengeluaran=true` untuk ikut menyetujui |
 | `volunteer` | checklist perpuluhan |
 
 ---

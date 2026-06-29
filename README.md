@@ -9,11 +9,13 @@
 ## Apa ini?
 
 Aplikasi pengelolaan keuangan gereja yang menggabungkan:
-- **Rekonsiliasi kas pasca‑ibadah** — hitung pecahan uang, cocokkan dengan kategori persembahan, tanda tangan Gembala & Saksi, lalu kunci data.
-- **Akuntansi otomatis** — setiap transaksi terposting double‑entry ke jurnal; Laporan Aktivitas, Neraca, dan Arus Kas muncul otomatis.
-- **Multi‑kas** — kelola banyak dompet/rekening dengan saldo real‑time.
+- **Multi‑kas dengan kategori custom** — tiap kategori persembahan (Ibadah Raya, Persepuluhan, Pembangunan, dst) diatur Super Admin dan menuju kas tujuannya sendiri; satu kali hitung uang otomatis terbagi ke beberapa kas.
+- **Akses kas berjenjang** — Super Admin menentukan kas mana yang boleh dipegang bendahara mana; admin/Super Admin akses semua.
+- **Rekonsiliasi kas pasca‑ibadah** — hitung pecahan uang, pilih & isi kategori (+ daftar nama pemberi opsional), catat pengeluaran tunai langsung ("Kartu Biru"), cocokkan, lalu **4 tanda tangan** (Penghitung 1 & 2, Bendahara, Gembala) mengunci data.
+- **Alur persetujuan pengeluaran** — diajukan bendahara, disetujui Super Admin atau majelis yang diberi izin khusus.
+- **Akuntansi otomatis** — setiap transaksi terposting double‑entry ke jurnal; Laporan Aktivitas, Neraca, Arus Kas, dan rekap saldo seluruh kas muncul otomatis.
 - **Pelacakan perpuluhan** — daftar centang otomatis siapa sudah/belum mengembalikan.
-- **Anggaran vs realisasi**, **manajemen pengeluaran berjenjang**, dan **backup terenkripsi otomatis**.
+- **Anggaran vs realisasi**, dan **backup terenkripsi otomatis**.
 
 ---
 
@@ -67,10 +69,10 @@ Panduan lengkap ada di **[SETUP_GUIDE.md](SETUP_GUIDE.md)**.
 
 ## Peran pengguna
 
-- **Bendahara** — input & kelola transaksi, laporan.
-- **Majelis** — lihat laporan & data.
-- **Admin** — kelola COA, kas, kategori, pengguna.
-- **Super Admin** — akses Backup & Restore.
+- **Bendahara** — input & kelola transaksi, hanya untuk kas yang ditugaskan padanya.
+- **Majelis** — lihat laporan & data; bisa diberi izin khusus untuk menyetujui pengeluaran.
+- **Admin** — kelola COA, kas, kategori, pengguna; akses ke semua kas.
+- **Super Admin** — semua akses tanpa batas: kelola kas, kategori persembahan, akses kas per bendahara, izin approve, + Backup & Restore.
 - **Volunteer** — pelacakan perpuluhan.
 
 Lihat **[SERAH_TERIMA.md](SERAH_TERIMA.md)** untuk informasi kepemilikan & serah‑terima.
