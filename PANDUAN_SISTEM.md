@@ -68,20 +68,25 @@ Super Admin otomatis punya akses ke semua kas.
 
 ## 3. Cara Kerja End-to-End (Rekonsiliasi Kas Pasca-Ibadah)
 
-Enam langkah baku, dijalankan di **aplikasi mobile**:
+Enam langkah baku, dijalankan di **aplikasi mobile** — urutannya mengikuti
+cara kerja form kertas: **kategorikan uang dulu, baru hitung fisiknya untuk
+verifikasi** (bukan sebaliknya):
 
 1. **Buka sesi** — beri **nama sesi bebas** (mis. "Persembahan Pagi"), pilih
    jenis ibadah, tanggal, jam → sistem membuat record `sesi_ibadah` berstatus
    `draft`.
-2. **Kalkulator denominasi** — masukkan jumlah lembar tiap pecahan
-   (100rb…1rb). Sistem menghitung **total fisik** otomatis (`sesi_pecahan`,
-   `total_fisik` dihitung trigger).
-3. **Pilih & isi kategori** — bendahara mencentang kategori mana yang
-   dihitung pada sesi ini (hanya kategori yang kasnya ia punya akses), lalu
-   isi nominal. Untuk kategori "butuh nama" (Persepuluhan, Pembangunan, dst),
-   tambahkan baris nama + nominal satu per satu. Tersimpan sebagai baris
-   `persembahan`, **kas tujuan terisi otomatis** dari kategori → `total_kategori`
-   dihitung trigger.
+2. **Pilih & isi kategori** — bendahara mencentang kategori mana yang
+   dihitung pada sesi ini (**hanya kategori yang kasnya ia punya akses** —
+   bendahara lain dengan kas berbeda akan melihat daftar kategori yang
+   berbeda pula), lalu isi nominal. Untuk kategori "butuh nama" (Persepuluhan,
+   Pembangunan, dst), tambahkan baris nama + nominal satu per satu. Tersimpan
+   sebagai baris `persembahan`, **kas tujuan terisi otomatis** dari kategori
+   → `total_kategori` dihitung trigger.
+3. **Kalkulator denominasi** — masukkan jumlah lembar tiap pecahan
+   (100rb…1rb) dari uang fisik yang terkumpul. Sistem menghitung **total fisik**
+   otomatis (`sesi_pecahan`, `total_fisik` dihitung trigger) — layar ini
+   menampilkan total kategori dari langkah 2 sebagai pembanding langsung
+   selagi menghitung.
 4. **Kartu Biru (opsional)** — kalau ada pengeluaran tunai langsung dari uang
    yang baru dihitung (mis. beli ATK, ongkos kebersihan), catat di sini.
    Tersimpan sebagai `pengeluaran` status **pending**, tertaut ke sesi —

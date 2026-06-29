@@ -5,7 +5,7 @@ import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/finance_provider.dart';
 import '../../providers/sesi_draft_provider.dart';
-import 'kartu_biru_screen.dart';
+import 'kalkulator_denominasi_screen.dart';
 
 class InputKategoriScreen extends StatefulWidget {
   const InputKategoriScreen({super.key});
@@ -172,12 +172,6 @@ class _InputKategoriScreenState extends State<InputKategoriScreen> {
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
               ],
             ),
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text('Fisik: ${formatRupiah(draft.totalFisik)}',
-                  style: TextStyle(color: AppColors.muted, fontSize: 12)),
-            ),
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
@@ -187,10 +181,10 @@ class _InputKategoriScreenState extends State<InputKategoriScreen> {
                     : () async {
                         await draft.syncKategori();
                         if (context.mounted) {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuBiruScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const KalkulatorDenominasiScreen()));
                         }
                       },
-                child: const Text('Lanjut ke kartu biru'),
+                child: const Text('Lanjut ke kalkulator'),
               ),
             ),
           ],

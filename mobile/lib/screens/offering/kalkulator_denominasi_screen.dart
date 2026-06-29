@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/sesi_draft_provider.dart';
-import 'input_kategori_screen.dart';
+import 'kartu_biru_screen.dart';
 
 class KalkulatorDenominasiScreen extends StatelessWidget {
   const KalkulatorDenominasiScreen({super.key});
@@ -70,6 +70,12 @@ class KalkulatorDenominasiScreen extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
               ],
             ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text('Kategori: ${formatRupiah(draft.totalKategori)}',
+                  style: TextStyle(color: AppColors.muted, fontSize: 12)),
+            ),
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
@@ -79,10 +85,10 @@ class KalkulatorDenominasiScreen extends StatelessWidget {
                     : () async {
                         await draft.syncDenominasi();
                         if (context.mounted) {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const InputKategoriScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuBiruScreen()));
                         }
                       },
-                child: const Text('Lanjut ke kategori'),
+                child: const Text('Lanjut ke kartu biru'),
               ),
             ),
           ],

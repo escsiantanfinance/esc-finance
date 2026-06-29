@@ -94,7 +94,7 @@ Lalu **buka https://project-escfinance.vercel.app, login, pastikan Dashboard tam
 
 ### L. Aplikasi Mobile _(2 mnt)_
 - Buka aplikasi di HP demo (lihat §4 cara siapkan APK‑nya). Tunjukkan alur:
-  **Buka sesi (beri nama) → kalkulator denominasi → centang & isi kategori → Kartu Biru (opsional) → 4 tanda tangan → kunci.**
+  **Buka sesi (beri nama) → centang & isi kategori (sesuai kas yang dipegang) → kalkulator denominasi (uang fisik, dibandingkan ke total kategori) → Kartu Biru (opsional) → 4 tanda tangan → kunci.**
 - Pesan jualan: _"Penghitungan uang & tanda tangan dilakukan langsung dari HP saat di gereja, bendahara hanya melihat kas miliknya, lalu semuanya tersinkron ke web seketika."_
 
 ---

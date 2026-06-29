@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/finance_provider.dart';
 import '../../providers/sesi_draft_provider.dart';
-import 'kalkulator_denominasi_screen.dart';
+import 'input_kategori_screen.dart';
 
 const _jenisOptions = [
   'Ibadah Raya 1', 'Ibadah Raya 2', 'Ibadah Raya 3',
@@ -109,7 +109,7 @@ class _BukaSesiScreenState extends State<BukaSesiScreen> {
       if (!mounted) return;
       await context.read<FinanceProvider>().ensureKasKategori();
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KalkulatorDenominasiScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const InputKategoriScreen()));
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);

@@ -5,7 +5,7 @@ import '../../models/models.dart';
 import '../../providers/finance_provider.dart';
 import '../../providers/sesi_draft_provider.dart';
 import 'buka_sesi_screen.dart';
-import 'kalkulator_denominasi_screen.dart';
+import 'input_kategori_screen.dart';
 
 class SesiIbadahScreen extends StatefulWidget {
   const SesiIbadahScreen({super.key});
@@ -97,7 +97,7 @@ class _SesiIbadahScreenState extends State<SesiIbadahScreen> {
     await fin.ensureKasKategori();
     await draft.resumeExisting(s, fin.kategoriPersembahan);
     if (!mounted) return;
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => const KalkulatorDenominasiScreen()));
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const InputKategoriScreen()));
     if (mounted) context.read<FinanceProvider>().loadSesi();
   }
 
