@@ -1,11 +1,21 @@
 -- ============================================================
--- ESC SIANTAN FINANCE - Supabase Database Schema v2.1
--- Sistem Akuntansi & Bendahara Gereja Terintegrasi
+-- ESC SIANTAN FINANCE - Supabase Database Schema v3.0
+-- Sistem Akuntansi & Bendahara Gereja Terintegrasi (Multi-Kas)
 -- ------------------------------------------------------------
 -- Desain inti: double-entry ledger (akun + jurnal_umum) sebagai
 -- satu sumber kebenaran. Persembahan & pengeluaran auto-posting
 -- ke jurnal lewat trigger, sehingga 3 laporan keuangan
 -- (Aktivitas / Neraca / Arus Kas) konsisten dari satu sumber.
+--
+-- BARU di v3.0:
+--   • Kategori persembahan jadi TABEL (bukan ENUM) → bisa dicustom
+--     Super Admin, tiap kategori menuju SATU kas tujuan.
+--   • Multi-kas: tiap kas punya sub-akun aset sendiri + akses per
+--     bendahara (kas_akses) yang diatur Super Admin.
+--   • Sesi: nama custom + pengeluaran tunai "Kartu Biru" masuk
+--     rekonsiliasi (fisik = Σ kategori − Σ pengeluaran) + 4 ttd.
+--   • Pengeluaran pakai alur persetujuan: diajukan bendahara,
+--     di-ACC Super Admin / user yang diberi izin (boleh_approve).
 --
 -- Aman dijalankan ulang pada project pra-peluncuran: script ini
 -- menghapus objek lama lalu membangun ulang dari nol.
@@ -18,12 +28,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- RESET (urutan aman terhadap dependensi)
 -- ============================================================
 DROP VIEW IF EXISTS v_status_perpuluhan, v_analitik_kas, v_anggaran_realisasi,
-  v_arus_kas, v_neraca, v_laporan_aktivitas, dashboard_summary,
+  v_arus_kas, v_neraca, v_laporan_aktivitas, v_rekap_saldo_kas, dashboard_summary,
   pengeluaran_per_kategori, ringkasan_bulanan CASCADE;
 
 DROP TABLE IF EXISTS jurnal_umum_detail, jurnal_umum, sesi_pecahan,
   persembahan, pengeluaran, anggaran, sesi_ibadah, anggota,
-  log_restore, log_backup, kas, kategori_pengeluaran, akun, profiles CASCADE;
+  log_restore, log_backup, kas_akses, kategori_persembahan, kas,
+  kategori_pengeluaran, akun, profiles CASCADE;
 
 DROP TABLE IF EXISTS jurnal_kas CASCADE; -- tabel v1 lama, digantikan jurnal_umum
 
@@ -35,7 +46,6 @@ DROP TYPE IF EXISTS user_role, offering_type, expense_status, budget_period,
 -- ENUM TYPES
 -- ============================================================
 CREATE TYPE user_role        AS ENUM ('bendahara', 'majelis', 'admin', 'volunteer');
-CREATE TYPE offering_type     AS ENUM ('perpuluhan', 'persembahan_umum', 'janji_iman', 'persembahan_khusus', 'kolekte', 'lainnya');
 CREATE TYPE expense_status    AS ENUM ('pending', 'disetujui', 'ditolak');
 CREATE TYPE budget_period     AS ENUM ('bulanan', 'triwulan', 'tahunan');
 CREATE TYPE akun_tipe         AS ENUM ('aset', 'kewajiban', 'ekuitas', 'pendapatan', 'beban');
@@ -44,6 +54,7 @@ CREATE TYPE sesi_status       AS ENUM ('draft', 'balanced', 'signed_locked');
 CREATE TYPE jurnal_sumber     AS ENUM ('persembahan', 'pengeluaran', 'manual');
 CREATE TYPE backup_tipe       AS ENUM ('manual', 'otomatis');
 CREATE TYPE backup_status     AS ENUM ('berjalan', 'sukses', 'gagal');
+-- Catatan: offering_type (ENUM) dihapus — diganti tabel kategori_persembahan.
 
 -- ============================================================
 -- TABLE: profiles (extends Supabase auth.users)
@@ -55,13 +66,15 @@ CREATE TABLE profiles (
   phone TEXT,
   avatar_url TEXT,
   is_active BOOLEAN DEFAULT true,
-  is_super_admin BOOLEAN NOT NULL DEFAULT false,  -- gating restore (PRD §6C)
+  is_super_admin BOOLEAN NOT NULL DEFAULT false,         -- gating restore & kontrol penuh (PRD §6C)
+  boleh_approve_pengeluaran BOOLEAN NOT NULL DEFAULT false, -- izin ACC pengeluaran (diberikan Super Admin)
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================================
 -- TABLE: akun (Chart of Accounts)
+-- Tiap kas punya sub-akun aset (1-11xx) agar laporan per-kas akurat.
 -- ============================================================
 CREATE TABLE akun (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -78,9 +91,22 @@ CREATE TABLE akun (
 
 INSERT INTO akun (kode_akun, nama_akun, tipe, saldo_normal, is_header) VALUES
   ('1-0000', 'ASET',                          'aset',       'debit',  true),
-  ('1-1001', 'Kas Gereja',                    'aset',       'debit',  false),
-  ('1-1002', 'Rekening Bank Gereja',          'aset',       'debit',  false),
-  ('1-1003', 'Kas Diakonia',                  'aset',       'debit',  false),
+  -- Sub-akun aset per kas (1 kas = 1 akun)
+  ('1-1101', 'Kas PK',                         'aset',       'debit',  false),
+  ('1-1102', 'Kas Anak Asuh',                  'aset',       'debit',  false),
+  ('1-1103', 'Kas Kids',                       'aset',       'debit',  false),
+  ('1-1104', 'Kas Bimbel',                     'aset',       'debit',  false),
+  ('1-1105', 'Kas Next Gen',                   'aset',       'debit',  false),
+  ('1-1106', 'Kas HRD',                        'aset',       'debit',  false),
+  ('1-1107', 'Kas EO - Induk',                 'aset',       'debit',  false),
+  ('1-1108', 'Kas Volunteer Days',             'aset',       'debit',  false),
+  ('1-1109', 'Kas Multimedia',                 'aset',       'debit',  false),
+  ('1-1110', 'Kas Komsel',                     'aset',       'debit',  false),
+  ('1-1111', 'Kas Pembangunan - Perehapan',    'aset',       'debit',  false),
+  ('1-1112', 'Kas Pembangunan - Janji Iman',   'aset',       'debit',  false),
+  ('1-1113', 'Kas EO - Kantin Mini',           'aset',       'debit',  false),
+  ('1-1114', 'Kas Sport',                      'aset',       'debit',  false),
+  ('1-1115', 'Kas Sewa Rumah',                 'aset',       'debit',  false),
   ('1-1100', 'Piutang Janji Iman',            'aset',       'debit',  false),
   ('1-2001', 'Peralatan & Inventaris',        'aset',       'debit',  false),
   ('2-0000', 'KEWAJIBAN',                     'kewajiban',  'kredit', true),
@@ -107,27 +133,89 @@ INSERT INTO akun (kode_akun, nama_akun, tipe, saldo_normal, is_header) VALUES
   ('5-1009', 'Beban Lainnya',                 'beban',      'debit',  false);
 
 -- ============================================================
--- TABLE: kas (Multi-Wallet) — Admin bebas menambah jenis kas
+-- TABLE: kas (Multi-Wallet) — Super Admin yang menambah/mengurangi.
+-- 15 kas awal di-seed (lihat "Rekapan Saldo Kas"); bisa ditambah lewat web.
 -- ============================================================
 CREATE TABLE kas (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   nama TEXT NOT NULL,
-  akun_id UUID REFERENCES akun(id),       -- akun Aset terkait di COA
+  akun_id UUID REFERENCES akun(id),       -- sub-akun Aset terkait di COA
+  penanggung_jawab TEXT,                  -- nama "MH" pemegang kas (info)
   saldo_awal DECIMAL(15,2) DEFAULT 0,
   saldo_saat_ini DECIMAL(15,2) DEFAULT 0, -- di-maintain trigger
   tipe TEXT DEFAULT 'tunai',              -- tunai | bank | digital (bebas)
   nomor_rekening TEXT,
   nama_bank TEXT,
   keterangan TEXT,
+  urutan INTEGER DEFAULT 0,
   is_aktif BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-INSERT INTO kas (nama, tipe, akun_id) VALUES
-  ('Kas Gereja',           'tunai', (SELECT id FROM akun WHERE kode_akun='1-1001')),
-  ('Rekening Bank Gereja', 'bank',  (SELECT id FROM akun WHERE kode_akun='1-1002')),
-  ('Kas Diakonia',         'tunai', (SELECT id FROM akun WHERE kode_akun='1-1003'));
+INSERT INTO kas (nama, tipe, urutan, penanggung_jawab, akun_id) VALUES
+  ('PK',                         'tunai', 1,  'Endang',           (SELECT id FROM akun WHERE kode_akun='1-1101')),
+  ('Anak Asuh',                  'tunai', 2,  'Endang',           (SELECT id FROM akun WHERE kode_akun='1-1102')),
+  ('Kids',                       'tunai', 3,  'Juliana',          (SELECT id FROM akun WHERE kode_akun='1-1103')),
+  ('Bimbel',                     'tunai', 4,  'Juliana',          (SELECT id FROM akun WHERE kode_akun='1-1104')),
+  ('Next Gen',                   'tunai', 5,  'Cindy',            (SELECT id FROM akun WHERE kode_akun='1-1105')),
+  ('HRD',                        'tunai', 6,  'Cindy',            (SELECT id FROM akun WHERE kode_akun='1-1106')),
+  ('EO - Induk',                 'tunai', 7,  'Cindy',            (SELECT id FROM akun WHERE kode_akun='1-1107')),
+  ('Volunteer Days',             'tunai', 8,  'Cindy',            (SELECT id FROM akun WHERE kode_akun='1-1108')),
+  ('Multimedia',                 'tunai', 9,  'Ferlianty/Aceng',  (SELECT id FROM akun WHERE kode_akun='1-1109')),
+  ('Komsel',                     'tunai', 10, 'Ferlianty/Aceng',  (SELECT id FROM akun WHERE kode_akun='1-1110')),
+  ('Pembangunan - Perehapan',    'tunai', 11, 'Yuliana/Achiang',  (SELECT id FROM akun WHERE kode_akun='1-1111')),
+  ('Pembangunan - Janji Iman',   'tunai', 12, 'Yuliana/Achiang',  (SELECT id FROM akun WHERE kode_akun='1-1112')),
+  ('EO - Kantin Mini',           'tunai', 13, 'Stephanie',        (SELECT id FROM akun WHERE kode_akun='1-1113')),
+  ('Sport',                      'tunai', 14, 'Elyon',            (SELECT id FROM akun WHERE kode_akun='1-1114')),
+  ('Sewa Rumah',                 'tunai', 15, 'Elyon',            (SELECT id FROM akun WHERE kode_akun='1-1115'));
+
+-- ============================================================
+-- TABLE: kas_akses — siapa (bendahara) boleh akses kas mana.
+-- Diatur Super Admin. Super Admin & Admin otomatis akses semua (lihat RLS).
+-- ============================================================
+CREATE TABLE kas_akses (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  kas_id UUID NOT NULL REFERENCES kas(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(kas_id, user_id)
+);
+CREATE INDEX idx_kas_akses_user ON kas_akses(user_id);
+
+-- ============================================================
+-- TABLE: kategori_persembahan — DICUSTOM Super Admin (ganti ENUM lama).
+-- Tiap kategori menuju SATU kas + 1 akun pendapatan untuk jurnal.
+-- butuh_nama = true → input mengumpulkan daftar nama pemberi.
+-- ============================================================
+CREATE TABLE kategori_persembahan (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  nama TEXT NOT NULL,
+  kas_id UUID REFERENCES kas(id),              -- kas tujuan
+  akun_pendapatan_id UUID REFERENCES akun(id), -- akun Pendapatan di COA
+  butuh_nama BOOLEAN NOT NULL DEFAULT false,   -- kumpulkan daftar nama pemberi?
+  is_perpuluhan BOOLEAN NOT NULL DEFAULT false,-- dipakai utk laporan status perpuluhan
+  warna TEXT DEFAULT '#6366F1',
+  urutan INTEGER DEFAULT 0,
+  is_aktif BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Seed kategori awal dari form Anda. Pasangan kas → SESUAIKAN nanti via web
+-- Super Admin bila tidak pas (mapping di bawah adalah tebakan wajar).
+INSERT INTO kategori_persembahan (nama, kas_id, akun_pendapatan_id, butuh_nama, is_perpuluhan, urutan) VALUES
+  ('Ibadah Raya',       (SELECT id FROM kas WHERE nama='EO - Induk'),                (SELECT id FROM akun WHERE kode_akun='4-1002'), false, false, 1),
+  ('Persepuluhan',      (SELECT id FROM kas WHERE nama='PK'),                        (SELECT id FROM akun WHERE kode_akun='4-1001'), true,  true,  2),
+  ('Ucapan Syukur',     (SELECT id FROM kas WHERE nama='EO - Induk'),                (SELECT id FROM akun WHERE kode_akun='4-1004'), true,  false, 3),
+  ('Buah Sulung',       (SELECT id FROM kas WHERE nama='EO - Induk'),                (SELECT id FROM akun WHERE kode_akun='4-1009'), true,  false, 4),
+  ('Pembangunan Gedung',(SELECT id FROM kas WHERE nama='Pembangunan - Janji Iman'),  (SELECT id FROM akun WHERE kode_akun='4-1004'), true,  false, 5),
+  ('Perehapan',         (SELECT id FROM kas WHERE nama='Pembangunan - Perehapan'),   (SELECT id FROM akun WHERE kode_akun='4-1004'), true,  false, 6),
+  ('Janji Iman',        (SELECT id FROM kas WHERE nama='Pembangunan - Janji Iman'),  (SELECT id FROM akun WHERE kode_akun='4-1003'), true,  false, 7),
+  ('Anak Asuh',         (SELECT id FROM kas WHERE nama='Anak Asuh'),                 (SELECT id FROM akun WHERE kode_akun='4-1004'), true,  false, 8),
+  ('Diakonia',          (SELECT id FROM kas WHERE nama='Anak Asuh'),                 (SELECT id FROM akun WHERE kode_akun='4-1004'), true,  false, 9),
+  ('Kolekte',           (SELECT id FROM kas WHERE nama='EO - Induk'),                (SELECT id FROM akun WHERE kode_akun='4-1005'), false, false, 10),
+  ('Lainnya',           (SELECT id FROM kas WHERE nama='EO - Induk'),                (SELECT id FROM akun WHERE kode_akun='4-1009'), false, false, 11);
 
 -- ============================================================
 -- TABLE: kategori_pengeluaran
@@ -173,19 +261,22 @@ CREATE TABLE anggota (
 -- ============================================================
 CREATE TABLE sesi_ibadah (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  nama_sesi TEXT,                                       -- nama custom (mis. "Persembahan Pagi")
   jenis_ibadah TEXT NOT NULL,
   tanggal DATE NOT NULL DEFAULT CURRENT_DATE,
   jam TIME,
   ibadah_ke INTEGER,
-  kas_id UUID REFERENCES kas(id),
+  kas_id UUID REFERENCES kas(id),                       -- kas utama sesi (opsional; kategori bisa beda kas)
   status sesi_status NOT NULL DEFAULT 'draft',
-  total_fisik DECIMAL(15,2) NOT NULL DEFAULT 0,
-  total_kategori DECIMAL(15,2) NOT NULL DEFAULT 0,
-  selisih DECIMAL(15,2) GENERATED ALWAYS AS (total_fisik - total_kategori) STORED,
-  nama_gembala TEXT,
-  ttd_gembala_url TEXT,
-  nama_saksi TEXT,
-  ttd_saksi_url TEXT,
+  total_fisik DECIMAL(15,2) NOT NULL DEFAULT 0,         -- Σ denominasi (uang dihitung)
+  total_kategori DECIMAL(15,2) NOT NULL DEFAULT 0,      -- Σ persembahan
+  total_pengeluaran DECIMAL(15,2) NOT NULL DEFAULT 0,   -- Σ "Kartu Biru" (pending+disetujui)
+  -- MATCH bila selisih = 0  →  fisik = kategori − pengeluaran
+  selisih DECIMAL(15,2) GENERATED ALWAYS AS (total_fisik - total_kategori + total_pengeluaran) STORED,
+  nama_gembala TEXT,        ttd_gembala_url TEXT,
+  nama_bendahara TEXT,      ttd_bendahara_url TEXT,
+  nama_penghitung1 TEXT,    ttd_penghitung1_url TEXT,
+  nama_penghitung2 TEXT,    ttd_penghitung2_url TEXT,
   signed_at TIMESTAMPTZ,
   catatan TEXT,
   dibuka_oleh UUID REFERENCES profiles(id),
@@ -208,18 +299,19 @@ CREATE TABLE sesi_pecahan (
 );
 
 -- ============================================================
--- TABLE: persembahan (Offerings) — bisa terikat sesi & anggota
+-- TABLE: persembahan (Offerings) — per kategori; bisa banyak baris
+-- (daftar nama pemberi) bila kategori.butuh_nama = true.
 -- ============================================================
 CREATE TABLE persembahan (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   tanggal DATE NOT NULL DEFAULT CURRENT_DATE,
-  jenis offering_type NOT NULL DEFAULT 'persembahan_umum',
+  kategori_id UUID NOT NULL REFERENCES kategori_persembahan(id),
   jumlah DECIMAL(15,2) NOT NULL CHECK (jumlah > 0),
-  kas_id UUID REFERENCES kas(id),
+  kas_id UUID REFERENCES kas(id),                       -- diisi OTOMATIS dari kategori.kas_id
   sesi_id UUID REFERENCES sesi_ibadah(id) ON DELETE SET NULL,
-  anggota_id UUID REFERENCES anggota(id),   -- untuk auto-mark perpuluhan (PRD §5C)
+  anggota_id UUID REFERENCES anggota(id),               -- untuk auto-mark perpuluhan (PRD §5C)
   keterangan TEXT,
-  nama_pemberi TEXT,                         -- NULL = anonim
+  nama_pemberi TEXT,                                     -- NULL = anonim
   metode_pembayaran TEXT DEFAULT 'tunai',
   nomor_referensi TEXT,
   dicatat_oleh UUID REFERENCES profiles(id),
@@ -229,15 +321,19 @@ CREATE TABLE persembahan (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+CREATE INDEX idx_persembahan_sesi ON persembahan(sesi_id);
+CREATE INDEX idx_persembahan_kategori ON persembahan(kategori_id);
 
 -- ============================================================
--- TABLE: pengeluaran (Expenses) — wajib pilih kas asal (PRD §5A)
+-- TABLE: pengeluaran (Expenses) — alur persetujuan.
+-- Bisa ditautkan sesi (Kartu Biru) → masuk rekonsiliasi sesi.
 -- ============================================================
 CREATE TABLE pengeluaran (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   tanggal DATE NOT NULL DEFAULT CURRENT_DATE,
   kategori_id UUID REFERENCES kategori_pengeluaran(id),
   kas_id UUID REFERENCES kas(id),
+  sesi_id UUID REFERENCES sesi_ibadah(id) ON DELETE SET NULL, -- "Kartu Biru" bila terisi
   jumlah DECIMAL(15,2) NOT NULL CHECK (jumlah > 0),
   keterangan TEXT NOT NULL,
   penerima TEXT,
@@ -252,6 +348,7 @@ CREATE TABLE pengeluaran (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+CREATE INDEX idx_pengeluaran_sesi ON pengeluaran(sesi_id);
 
 -- ============================================================
 -- TABLE: anggaran (Budget) — per kategori/divisi
@@ -333,6 +430,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER t_profiles_updated BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER t_akun_updated BEFORE UPDATE ON akun FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER t_kas_updated BEFORE UPDATE ON kas FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER t_kategori_persembahan_updated BEFORE UPDATE ON kategori_persembahan FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER t_anggota_updated BEFORE UPDATE ON anggota FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER t_sesi_updated BEFORE UPDATE ON sesi_ibadah FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER t_pecahan_updated BEFORE UPDATE ON sesi_pecahan FOR EACH ROW EXECUTE FUNCTION update_updated_at();
@@ -361,18 +459,30 @@ $$;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
--- Default kas bila tidak diisi (fallback ke kas aktif pertama)
-CREATE OR REPLACE FUNCTION set_default_kas()
+-- Isi kas_id persembahan dari kategori bila kosong (tiap kategori → 1 kas)
+CREATE OR REPLACE FUNCTION set_kas_persembahan()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.kas_id IS NULL THEN
-    SELECT id INTO NEW.kas_id FROM kas WHERE is_aktif = true ORDER BY created_at LIMIT 1;
+  IF NEW.kas_id IS NULL AND NEW.kategori_id IS NOT NULL THEN
+    SELECT kas_id INTO NEW.kas_id FROM kategori_persembahan WHERE id = NEW.kategori_id;
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER t_persembahan_default_kas BEFORE INSERT ON persembahan FOR EACH ROW EXECUTE FUNCTION set_default_kas();
+CREATE TRIGGER t_persembahan_set_kas BEFORE INSERT OR UPDATE ON persembahan FOR EACH ROW EXECUTE FUNCTION set_kas_persembahan();
+
+-- Default kas pengeluaran bila kosong (fallback ke kas aktif pertama)
+CREATE OR REPLACE FUNCTION set_default_kas()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.kas_id IS NULL THEN
+    SELECT id INTO NEW.kas_id FROM kas WHERE is_aktif = true ORDER BY urutan, created_at LIMIT 1;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER t_pengeluaran_default_kas BEFORE INSERT ON pengeluaran FOR EACH ROW EXECUTE FUNCTION set_default_kas();
 
 -- Hitung ulang saldo kas dari sumber kebenaran (anti-drift)
@@ -390,17 +500,6 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION akun_id_by_kode(p_kode TEXT)
 RETURNS UUID AS $$ SELECT id FROM akun WHERE kode_akun = p_kode LIMIT 1; $$ LANGUAGE sql STABLE;
-
-CREATE OR REPLACE FUNCTION akun_pendapatan(p_jenis offering_type)
-RETURNS UUID AS $$
-  SELECT akun_id_by_kode(CASE p_jenis
-    WHEN 'perpuluhan'         THEN '4-1001'
-    WHEN 'persembahan_umum'   THEN '4-1002'
-    WHEN 'janji_iman'         THEN '4-1003'
-    WHEN 'persembahan_khusus' THEN '4-1004'
-    WHEN 'kolekte'            THEN '4-1005'
-    ELSE '4-1009' END);
-$$ LANGUAGE sql STABLE;
 
 -- Posting / un-posting jurnal otomatis
 CREATE OR REPLACE FUNCTION unpost_jurnal(p_sumber jurnal_sumber, p_sumber_id UUID)
@@ -425,16 +524,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- PERSEMBAHAN: Debit Kas | Kredit Pendapatan
+-- PERSEMBAHAN: Debit Kas | Kredit Pendapatan (akun dari kategori)
 CREATE OR REPLACE FUNCTION trg_persembahan_post()
 RETURNS TRIGGER AS $$
-DECLARE v_kas_akun UUID;
+DECLARE v_kas_akun UUID; v_pend_akun UUID; v_nama TEXT;
 BEGIN
   IF TG_OP IN ('UPDATE','DELETE') THEN PERFORM unpost_jurnal('persembahan', OLD.id); END IF;
   IF TG_OP IN ('INSERT','UPDATE') THEN
     SELECT akun_id INTO v_kas_akun FROM kas WHERE id = NEW.kas_id;
-    PERFORM post_jurnal(NEW.tanggal, 'Persembahan: ' || NEW.jenis::text,
-      'persembahan', NEW.id, v_kas_akun, akun_pendapatan(NEW.jenis), NEW.jumlah);
+    SELECT akun_pendapatan_id, nama INTO v_pend_akun, v_nama FROM kategori_persembahan WHERE id = NEW.kategori_id;
+    PERFORM post_jurnal(NEW.tanggal, 'Persembahan: ' || COALESCE(v_nama,'-'),
+      'persembahan', NEW.id, v_kas_akun, v_pend_akun, NEW.jumlah);
   END IF;
   IF TG_OP = 'UPDATE' AND OLD.kas_id IS DISTINCT FROM NEW.kas_id THEN PERFORM recalc_saldo_kas(OLD.kas_id); END IF;
   IF TG_OP = 'DELETE' THEN PERFORM recalc_saldo_kas(OLD.kas_id); RETURN OLD;
@@ -469,14 +569,16 @@ CREATE TRIGGER t_pengeluaran_post
   AFTER INSERT OR UPDATE OR DELETE ON pengeluaran
   FOR EACH ROW EXECUTE FUNCTION trg_pengeluaran_post();
 
--- Recalc total sesi (selisih = generated column, otomatis)
+-- Recalc total sesi: fisik (denominasi), kategori (persembahan), pengeluaran (kartu biru)
 CREATE OR REPLACE FUNCTION recalc_sesi(p_sesi UUID)
 RETURNS VOID AS $$
 BEGIN
   IF p_sesi IS NULL THEN RETURN; END IF;
   UPDATE sesi_ibadah s SET
     total_fisik = COALESCE((SELECT SUM(subtotal) FROM sesi_pecahan WHERE sesi_id = p_sesi),0),
-    total_kategori = COALESCE((SELECT SUM(jumlah) FROM persembahan WHERE sesi_id = p_sesi),0)
+    total_kategori = COALESCE((SELECT SUM(jumlah) FROM persembahan WHERE sesi_id = p_sesi),0),
+    total_pengeluaran = COALESCE((SELECT SUM(jumlah) FROM pengeluaran
+                                  WHERE sesi_id = p_sesi AND status <> 'ditolak'),0)
   WHERE s.id = p_sesi;
 END;
 $$ LANGUAGE plpgsql;
@@ -503,7 +605,21 @@ CREATE TRIGGER t_recalc_sesi_persembahan
   AFTER INSERT OR UPDATE OR DELETE ON persembahan
   FOR EACH ROW EXECUTE FUNCTION trg_recalc_sesi_persembahan();
 
--- Penguncian data sesi signed_locked (PRD §3.5) — blokir edit, izinkan cascade
+-- Kartu Biru: pengeluaran bertaut sesi → recalc total_pengeluaran sesi
+CREATE OR REPLACE FUNCTION trg_recalc_sesi_pengeluaran()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'UPDATE' AND OLD.sesi_id IS DISTINCT FROM NEW.sesi_id THEN PERFORM recalc_sesi(OLD.sesi_id); END IF;
+  PERFORM recalc_sesi(COALESCE(NEW.sesi_id, OLD.sesi_id));
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER t_recalc_sesi_pengeluaran
+  AFTER INSERT OR UPDATE OR DELETE ON pengeluaran
+  FOR EACH ROW EXECUTE FUNCTION trg_recalc_sesi_pengeluaran();
+
+-- Penguncian data sesi signed_locked (PRD §3.5) — blokir edit persembahan & pecahan
 CREATE OR REPLACE FUNCTION trg_block_locked_sesi()
 RETURNS TRIGGER AS $$
 DECLARE v_status sesi_status;
@@ -548,6 +664,12 @@ SELECT
   (SELECT COUNT(*) FROM pengeluaran WHERE status='pending') AS pengeluaran_pending,
   (SELECT COALESCE(SUM(saldo_saat_ini),0) FROM kas WHERE is_aktif=true) AS total_saldo;
 
+-- Rekap saldo per kas (seperti "Rekapan Saldo Kas")
+CREATE VIEW v_rekap_saldo_kas AS
+SELECT k.id AS kas_id, k.nama AS kas_nama, k.penanggung_jawab, k.tipe,
+       k.saldo_awal, k.saldo_saat_ini, k.urutan, k.is_aktif
+FROM kas k ORDER BY k.urutan, k.nama;
+
 -- Laporan Aktivitas (Income Statement) — dari jurnal
 CREATE VIEW v_laporan_aktivitas AS
 SELECT a.id AS akun_id, a.kode_akun, a.nama_akun, a.tipe,
@@ -562,11 +684,6 @@ WHERE a.tipe IN ('pendapatan','beban')
 GROUP BY a.id, a.kode_akun, a.nama_akun, a.tipe, DATE_TRUNC('month', j.tanggal), EXTRACT(YEAR FROM j.tanggal);
 
 -- Neraca (Balance Sheet) — saldo berjalan per akun.
--- Dirancang agar SELALU seimbang (Aset = Kewajiban + Ekuitas) dan cocok dengan
--- saldo kas riil, dengan dua komponen ekuitas turunan:
---   (a) Saldo Dana Awal  = lawan akuntansi dari saldo_awal kas (modal pembuka)
---   (b) Surplus Berjalan = akumulasi pendapatan - beban (belum di-closing ke dana)
--- Saldo awal kas dimasukkan ke sisi aset agar Total Aset = total saldo_saat_ini.
 CREATE VIEW v_neraca AS
 SELECT a.id AS akun_id, a.kode_akun, a.nama_akun, a.tipe, a.saldo_normal,
        (CASE WHEN a.saldo_normal='debit' THEN COALESCE(SUM(d.debit - d.kredit),0)
@@ -576,8 +693,6 @@ FROM akun a LEFT JOIN jurnal_umum_detail d ON d.akun_id = a.id
 WHERE a.tipe IN ('aset','kewajiban','ekuitas') AND a.is_header = false
 GROUP BY a.id, a.kode_akun, a.nama_akun, a.tipe, a.saldo_normal
 UNION ALL
--- Hanya saldo_awal kas yang tertaut akun aset (sama dgn yang masuk sisi aset),
--- supaya sisi aset & ekuitas selalu cocok meski ada kas tanpa tautan COA.
 SELECT '00000000-0000-0000-0000-000000000002'::uuid, '3-9000', 'Saldo Dana Awal',
        'ekuitas'::akun_tipe, 'kredit'::saldo_normal_tipe,
        COALESCE((SELECT SUM(k.saldo_awal) FROM kas k
@@ -630,7 +745,8 @@ CREATE VIEW v_status_perpuluhan AS
 SELECT an.id AS anggota_id, an.nama, an.kontak, an.divisi_pelayanan, an.is_volunteer,
        per.tahun, per.bulan,
        EXISTS (SELECT 1 FROM persembahan p
-         WHERE p.anggota_id = an.id AND p.jenis = 'perpuluhan'
+         JOIN kategori_persembahan kp ON kp.id = p.kategori_id
+         WHERE p.anggota_id = an.id AND kp.is_perpuluhan
            AND EXTRACT(YEAR FROM p.tanggal) = per.tahun
            AND EXTRACT(MONTH FROM p.tanggal) = per.bulan) AS sudah_mengembalikan
 FROM anggota an
@@ -647,6 +763,8 @@ WHERE an.wajib_perpuluhan = true AND an.is_aktif = true;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE akun ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kas_akses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kategori_persembahan ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kategori_pengeluaran ENABLE ROW LEVEL SECURITY;
 ALTER TABLE anggota ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sesi_ibadah ENABLE ROW LEVEL SECURITY;
@@ -683,17 +801,46 @@ AS $$
   SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_super_admin = true);
 $$;
 
+-- Boleh meng-ACC pengeluaran: Super Admin selalu, atau user yang diberi izin.
+CREATE OR REPLACE FUNCTION boleh_approve()
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (SELECT 1 FROM public.profiles
+                 WHERE id = auth.uid() AND (is_super_admin = true OR boleh_approve_pengeluaran = true));
+$$;
+
+-- Akses kas: Super Admin/Admin akses semua; lainnya hanya kas yang ditugaskan.
+CREATE OR REPLACE FUNCTION punya_akses_kas(p_kas UUID)
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT is_superadmin() OR is_admin()
+      OR EXISTS (SELECT 1 FROM public.kas_akses ka WHERE ka.kas_id = p_kas AND ka.user_id = auth.uid());
+$$;
+
 CREATE POLICY p_profiles_select ON profiles FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY p_profiles_update ON profiles FOR UPDATE USING (auth.uid() = id OR is_admin());
+CREATE POLICY p_profiles_update ON profiles FOR UPDATE USING (auth.uid() = id OR is_admin() OR is_superadmin());
 
 CREATE POLICY p_akun_select ON akun FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY p_akun_manage ON akun FOR ALL USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY p_akun_manage ON akun FOR ALL USING (is_admin() OR is_superadmin()) WITH CHECK (is_admin() OR is_superadmin());
 
+-- Kas hanya dikelola Super Admin (tambah/kurang); semua boleh lihat.
 CREATE POLICY p_kas_select ON kas FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY p_kas_manage ON kas FOR ALL USING (is_staff()) WITH CHECK (is_staff());
+CREATE POLICY p_kas_manage ON kas FOR ALL USING (is_superadmin()) WITH CHECK (is_superadmin());
+
+-- kas_akses: user lihat barisnya sendiri; Super Admin kelola semua.
+CREATE POLICY p_kasakses_select ON kas_akses FOR SELECT USING (user_id = auth.uid() OR is_superadmin() OR is_admin());
+CREATE POLICY p_kasakses_manage ON kas_akses FOR ALL USING (is_superadmin()) WITH CHECK (is_superadmin());
+
+-- kategori_persembahan: dicustom Super Admin; semua boleh lihat.
+CREATE POLICY p_katpers_select ON kategori_persembahan FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY p_katpers_manage ON kategori_persembahan FOR ALL USING (is_superadmin()) WITH CHECK (is_superadmin());
 
 CREATE POLICY p_kat_select ON kategori_pengeluaran FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY p_kat_manage ON kategori_pengeluaran FOR ALL USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY p_kat_manage ON kategori_pengeluaran FOR ALL USING (is_admin() OR is_superadmin()) WITH CHECK (is_admin() OR is_superadmin());
 
 CREATE POLICY p_anggota_select ON anggota FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY p_anggota_manage ON anggota FOR ALL USING (is_staff()) WITH CHECK (is_staff());
@@ -704,13 +851,17 @@ CREATE POLICY p_sesi_manage ON sesi_ibadah FOR ALL USING (is_staff()) WITH CHECK
 CREATE POLICY p_pecahan_select ON sesi_pecahan FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY p_pecahan_manage ON sesi_pecahan FOR ALL USING (is_staff()) WITH CHECK (is_staff());
 
+-- Persembahan: bendahara hanya boleh untuk kas yang ia akses.
 CREATE POLICY p_persembahan_select ON persembahan FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY p_persembahan_manage ON persembahan FOR ALL USING (is_staff()) WITH CHECK (is_staff());
+CREATE POLICY p_persembahan_manage ON persembahan FOR ALL
+  USING (punya_akses_kas(kas_id)) WITH CHECK (punya_akses_kas(kas_id));
 
+-- Pengeluaran: ajukan (insert) utk kas yang diakses; ACC (update) oleh approver.
 CREATE POLICY p_pengeluaran_select ON pengeluaran FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY p_pengeluaran_insert ON pengeluaran FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY p_pengeluaran_update ON pengeluaran FOR UPDATE USING (is_staff() OR diajukan_oleh = auth.uid());
-CREATE POLICY p_pengeluaran_delete ON pengeluaran FOR DELETE USING (is_staff());
+CREATE POLICY p_pengeluaran_insert ON pengeluaran FOR INSERT WITH CHECK (punya_akses_kas(kas_id));
+CREATE POLICY p_pengeluaran_update ON pengeluaran FOR UPDATE
+  USING (boleh_approve() OR diajukan_oleh = auth.uid());
+CREATE POLICY p_pengeluaran_delete ON pengeluaran FOR DELETE USING (boleh_approve());
 
 CREATE POLICY p_anggaran_select ON anggaran FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY p_anggaran_manage ON anggaran FOR ALL USING (is_staff()) WITH CHECK (is_staff());
@@ -727,4 +878,8 @@ CREATE POLICY p_logrestore_super ON log_restore FOR ALL USING (is_superadmin()) 
 -- SELESAI. Setelah dijalankan, buat user pertama via
 -- Authentication → Users, lalu jadikan admin & super admin:
 --   UPDATE profiles SET role='admin', is_super_admin=true WHERE id='<USER_ID>';
+-- Beri izin ACC pengeluaran ke majelis tertentu:
+--   UPDATE profiles SET boleh_approve_pengeluaran=true WHERE id='<USER_ID>';
+-- Beri akses kas ke bendahara:
+--   INSERT INTO kas_akses (kas_id, user_id) VALUES ('<KAS_ID>','<USER_ID>');
 -- ============================================================

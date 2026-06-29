@@ -24,7 +24,7 @@ Dokumen ini merangkum **apa yang diterima pembeli** dan **cara mengambil alih ke
 - **Website:** https://project-escfinance.vercel.app
 - **Akun admin:** escsiantanfinance@gmail.com
 - **Hosting web:** Vercel (project `esc-finance`)
-- **Database & Auth:** Supabase (project `vtupgtrlsydiunpiqiui`)
+- **Database & Auth:** Supabase (project `nevczzjdvxpqiezqdhox`)
 - **Kode sumber:** GitHub `escsiantanfinance/esc-finance`
 
 ---

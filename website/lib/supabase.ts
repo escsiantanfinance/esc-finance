@@ -10,7 +10,6 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 // TYPES
 // ============================================================
 export type UserRole = 'bendahara' | 'majelis' | 'admin' | 'volunteer'
-export type OfferingType = 'perpuluhan' | 'persembahan_umum' | 'janji_iman' | 'persembahan_khusus' | 'kolekte' | 'lainnya'
 export type ExpenseStatus = 'pending' | 'disetujui' | 'ditolak'
 export type AkunTipe = 'aset' | 'kewajiban' | 'ekuitas' | 'pendapatan' | 'beban'
 export type SesiStatus = 'draft' | 'balanced' | 'signed_locked'
@@ -20,6 +19,7 @@ export interface Profile {
   full_name: string
   role: UserRole
   is_super_admin: boolean
+  boleh_approve_pengeluaran?: boolean
   phone?: string
   is_active: boolean
 }
@@ -38,13 +38,28 @@ export interface Kas {
   id: string
   nama: string
   akun_id?: string
+  penanggung_jawab?: string
   saldo_awal: number
   saldo_saat_ini: number
   tipe: string
   nomor_rekening?: string
   nama_bank?: string
   keterangan?: string
+  urutan?: number
   is_aktif: boolean
+}
+
+export interface KategoriPersembahan {
+  id: string
+  nama: string
+  kas_id?: string
+  akun_pendapatan_id?: string
+  butuh_nama: boolean
+  is_perpuluhan: boolean
+  warna?: string
+  urutan?: number
+  is_aktif: boolean
+  kas?: { nama: string }
 }
 
 export interface KategoriPengeluaran {
@@ -69,6 +84,7 @@ export interface Anggota {
 
 export interface SesiIbadah {
   id: string
+  nama_sesi?: string
   jenis_ibadah: string
   tanggal: string
   jam?: string
@@ -77,11 +93,16 @@ export interface SesiIbadah {
   status: SesiStatus
   total_fisik: number
   total_kategori: number
+  total_pengeluaran: number
   selisih: number
   nama_gembala?: string
   ttd_gembala_url?: string
-  nama_saksi?: string
-  ttd_saksi_url?: string
+  nama_bendahara?: string
+  ttd_bendahara_url?: string
+  nama_penghitung1?: string
+  ttd_penghitung1_url?: string
+  nama_penghitung2?: string
+  ttd_penghitung2_url?: string
   signed_at?: string
   catatan?: string
   created_at: string
@@ -99,7 +120,7 @@ export interface SesiPecahan {
 export interface Persembahan {
   id: string
   tanggal: string
-  jenis: OfferingType
+  kategori_id: string
   jumlah: number
   kas_id?: string
   sesi_id?: string
@@ -111,6 +132,7 @@ export interface Persembahan {
   created_at: string
   kas?: { nama: string }
   anggota?: { nama: string }
+  kategori?: { nama: string }
 }
 
 export interface Pengeluaran {
@@ -178,17 +200,8 @@ export interface DashboardSummary {
 }
 
 // ============================================================
-// LABELS & HELPERS
+// HELPERS
 // ============================================================
-export const OFFERING_LABELS: Record<OfferingType, string> = {
-  perpuluhan: 'Perpuluhan',
-  persembahan_umum: 'Persembahan Umum',
-  janji_iman: 'Janji Iman',
-  persembahan_khusus: 'Persembahan Khusus',
-  kolekte: 'Kolekte',
-  lainnya: 'Lainnya',
-}
-
 export function formatRupiah(amount: number | null | undefined): string {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',

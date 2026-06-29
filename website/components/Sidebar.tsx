@@ -31,6 +31,7 @@ const navGroups: { title: string; items: NavItem[] }[] = [
   {
     title: 'Sistem',
     items: [
+      { href: '/kategori', label: 'Kategori Persembahan', icon: '🏷️', vis: 'super' },
       { href: '/users', label: 'Kelola Pengguna', icon: '👥', vis: 'admin' },
       { href: '/backup', label: 'Backup', icon: '🗄️', vis: 'super' },
     ],

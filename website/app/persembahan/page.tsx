@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase, formatRupiah, formatTanggal, OFFERING_LABELS, type Persembahan } from '@/lib/supabase'
+import { supabase, formatRupiah, formatTanggal, type Persembahan } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
 
 export default function PersembahanPage() {
@@ -14,7 +14,7 @@ export default function PersembahanPage() {
       const start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       const { data: rows } = await supabase
         .from('persembahan')
-        .select('*, kas:kas_id(nama), anggota:anggota_id(nama), pencatat:dicatat_oleh(full_name)')
+        .select('*, kas:kas_id(nama), anggota:anggota_id(nama), kategori:kategori_id(nama), pencatat:dicatat_oleh(full_name)')
         .gte('tanggal', start)
         .order('tanggal', { ascending: false })
       if (rows) { setData(rows as any); setTotal(rows.reduce((s, r: any) => s + Number(r.jumlah), 0)) }
@@ -27,7 +27,7 @@ export default function PersembahanPage() {
     exportToExcel(
       data.map(r => ({
         Tanggal: r.tanggal,
-        Jenis: OFFERING_LABELS[r.jenis] ?? r.jenis,
+        Kategori: r.kategori?.nama ?? '-',
         Jumlah: r.jumlah,
         Pemberi: r.nama_pemberi ?? 'Anonim',
         'Diinput oleh': (r as any).pencatat?.full_name ?? '-',
@@ -59,7 +59,7 @@ export default function PersembahanPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {['Tanggal', 'Jenis', 'Jumlah', 'Pemberi', 'Diinput oleh', 'Kas', 'Metode', 'Status'].map(h => (
+                {['Tanggal', 'Kategori', 'Jumlah', 'Pemberi', 'Diinput oleh', 'Kas', 'Metode', 'Status'].map(h => (
                   <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>
                 ))}
               </tr>
@@ -72,7 +72,7 @@ export default function PersembahanPage() {
               ) : data.map(row => (
                 <tr key={row.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">{formatTanggal(row.tanggal)}</td>
-                  <td className="px-4 py-3">{OFFERING_LABELS[row.jenis] ?? row.jenis}</td>
+                  <td className="px-4 py-3">{row.kategori?.nama ?? '-'}</td>
                   <td className="px-4 py-3 font-semibold text-green-700">{formatRupiah(row.jumlah)}</td>
                   <td className="px-4 py-3 text-gray-500">{row.nama_pemberi ?? 'Anonim'}</td>
                   <td className="px-4 py-3 text-gray-600">{(row as any).pencatat?.full_name ?? '—'}</td>

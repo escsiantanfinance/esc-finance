@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'offering/sesi_ibadah_screen.dart';
 import 'expense/pengeluaran_screen.dart';
-import 'budget/anggaran_screen.dart';
 import 'report/laporan_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -18,7 +17,6 @@ class _HomeShellState extends State<HomeShell> {
     DashboardScreen(),
     SesiIbadahScreen(),
     PengeluaranScreen(),
-    AnggaranScreen(),
     LaporanScreen(),
   ];
 
@@ -33,7 +31,6 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Beranda'),
           NavigationDestination(icon: Icon(Icons.church_outlined), selectedIcon: Icon(Icons.church), label: 'Sesi'),
           NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Keluar'),
-          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Anggaran'),
           NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: 'Laporan'),
         ],
       ),

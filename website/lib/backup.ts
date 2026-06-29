@@ -5,7 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Tabel yang dicadangkan (urutan dependensi FK untuk restore)
 export const BACKUP_TABLES = [
-  'profiles', 'akun', 'kas', 'kategori_pengeluaran', 'anggota',
+  'profiles', 'akun', 'kas', 'kas_akses', 'kategori_persembahan', 'kategori_pengeluaran', 'anggota',
   'sesi_ibadah', 'sesi_pecahan', 'persembahan', 'pengeluaran', 'anggaran',
   'jurnal_umum', 'jurnal_umum_detail',
 ]
@@ -98,7 +98,7 @@ function strip(row: any): any {
 // Restore upsert aman: master dulu, lalu transaksi (jurnal di-rebuild trigger)
 export async function restoreFromParsed(admin: SupabaseClient, parsed: Record<string, any[]>) {
   const summary: Record<string, number> = {}
-  const order = ['profiles', 'akun', 'kas', 'kategori_pengeluaran', 'anggota',
+  const order = ['profiles', 'akun', 'kas', 'kas_akses', 'kategori_persembahan', 'kategori_pengeluaran', 'anggota',
     'sesi_ibadah', 'sesi_pecahan', 'persembahan', 'pengeluaran', 'anggaran']
   for (const table of order) {
     let rows = parsed[table]

@@ -12,42 +12,58 @@ class BalancingSignatureScreen extends StatefulWidget {
 }
 
 class _BalancingSignatureScreenState extends State<BalancingSignatureScreen> {
+  final _p1Name = TextEditingController();
+  final _p2Name = TextEditingController();
+  final _bendaharaName = TextEditingController();
   final _gembalaName = TextEditingController();
-  final _saksiName = TextEditingController();
+  final _p1Sig = SignatureController(penStrokeWidth: 2, penColor: Colors.black87);
+  final _p2Sig = SignatureController(penStrokeWidth: 2, penColor: Colors.black87);
+  final _bendaharaSig = SignatureController(penStrokeWidth: 2, penColor: Colors.black87);
   final _gembalaSig = SignatureController(penStrokeWidth: 2, penColor: Colors.black87);
-  final _saksiSig = SignatureController(penStrokeWidth: 2, penColor: Colors.black87);
   bool _saving = false;
 
   @override
   void dispose() {
+    _p1Name.dispose();
+    _p2Name.dispose();
+    _bendaharaName.dispose();
     _gembalaName.dispose();
-    _saksiName.dispose();
+    _p1Sig.dispose();
+    _p2Sig.dispose();
+    _bendaharaSig.dispose();
     _gembalaSig.dispose();
-    _saksiSig.dispose();
     super.dispose();
   }
 
   Future<void> _simpanKunci(SesiDraftProvider draft) async {
     if (!draft.isMatch) return;
-    if (_gembalaName.text.isEmpty || _saksiName.text.isEmpty) {
-      _toast('Nama Gembala & Saksi wajib diisi');
+    if (_p1Name.text.isEmpty || _p2Name.text.isEmpty || _bendaharaName.text.isEmpty || _gembalaName.text.isEmpty) {
+      _toast('Semua nama penandatangan wajib diisi');
       return;
     }
-    if (_gembalaSig.isEmpty || _saksiSig.isEmpty) {
-      _toast('Kedua tanda tangan wajib diisi');
+    if (_p1Sig.isEmpty || _p2Sig.isEmpty || _bendaharaSig.isEmpty || _gembalaSig.isEmpty) {
+      _toast('Semua tanda tangan wajib diisi');
       return;
     }
     setState(() => _saving = true);
     try {
+      final p1Bytes = await _p1Sig.toPngBytes();
+      final p2Bytes = await _p2Sig.toPngBytes();
+      final bBytes = await _bendaharaSig.toPngBytes();
       final gBytes = await _gembalaSig.toPngBytes();
-      final sBytes = await _saksiSig.toPngBytes();
+      final p1Url = await draft.repo.uploadSignature(p1Bytes!, 'penghitung1');
+      final p2Url = await draft.repo.uploadSignature(p2Bytes!, 'penghitung2');
+      final bUrl = await draft.repo.uploadSignature(bBytes!, 'bendahara');
       final gUrl = await draft.repo.uploadSignature(gBytes!, 'gembala');
-      final sUrl = await draft.repo.uploadSignature(sBytes!, 'saksi');
       await draft.finalizeLock(
+        namaPenghitung1: _p1Name.text,
+        ttdPenghitung1Url: p1Url,
+        namaPenghitung2: _p2Name.text,
+        ttdPenghitung2Url: p2Url,
+        namaBendahara: _bendaharaName.text,
+        ttdBendaharaUrl: bUrl,
         namaGembala: _gembalaName.text,
         ttdGembalaUrl: gUrl,
-        namaSaksi: _saksiName.text,
-        ttdSaksiUrl: sUrl,
       );
       if (!mounted) return;
       Navigator.popUntil(context, (r) => r.isFirst);
@@ -80,7 +96,7 @@ class _BalancingSignatureScreenState extends State<BalancingSignatureScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: (match ? AppColors.success : AppColors.danger).withOpacity(0.12),
+              color: (match ? AppColors.success : AppColors.danger).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Column(
@@ -88,8 +104,11 @@ class _BalancingSignatureScreenState extends State<BalancingSignatureScreen> {
                 Text(match ? '✓ MATCH' : '✗ MISMATCH',
                     style: TextStyle(color: match ? AppColors.success : AppColors.danger, fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
-                Text('Fisik ${formatRupiah(draft.totalFisik)} · Kategori ${formatRupiah(draft.totalKategori)}',
-                    style: TextStyle(color: AppColors.muted, fontSize: 13)),
+                Text(
+                  'Fisik ${formatRupiah(draft.totalFisik)} · Kategori ${formatRupiah(draft.totalKategori)} · Keluar ${formatRupiah(draft.totalPengeluaran)}',
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
                 Text('Selisih ${formatRupiah(draft.selisih)}',
                     style: TextStyle(color: match ? AppColors.success : AppColors.danger, fontWeight: FontWeight.w600)),
               ],
@@ -100,13 +119,19 @@ class _BalancingSignatureScreenState extends State<BalancingSignatureScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(12)),
-              child: const Text('Total fisik dan kategori belum sama. Kembali perbaiki denominasi atau kategori sebelum menandatangani.',
-                  style: TextStyle(color: Color(0xFF92400E), fontSize: 13)),
+              child: const Text(
+                'Total fisik dan (kategori − pengeluaran) belum sama. Kembali perbaiki denominasi, kategori, atau kartu biru sebelum menandatangani.',
+                style: TextStyle(color: Color(0xFF92400E), fontSize: 13),
+              ),
             )
           else ...[
-            _sigBlock('Tanda tangan Gembala', _gembalaName, _gembalaSig),
+            _sigBlock('Tanda tangan Penghitung 1', _p1Name, _p1Sig),
             const SizedBox(height: 18),
-            _sigBlock('Tanda tangan Saksi', _saksiName, _saksiSig),
+            _sigBlock('Tanda tangan Penghitung 2', _p2Name, _p2Sig),
+            const SizedBox(height: 18),
+            _sigBlock('Tanda tangan Bendahara', _bendaharaName, _bendaharaSig),
+            const SizedBox(height: 18),
+            _sigBlock('Tanda tangan Gembala', _gembalaName, _gembalaSig),
             const SizedBox(height: 22),
             SizedBox(
               width: double.infinity,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/finance_provider.dart';
 
 class PengeluaranScreen extends StatefulWidget {
@@ -67,10 +68,12 @@ class _PengeluaranScreenState extends State<PengeluaranScreen> {
 
   void _showAddSheet(BuildContext context) {
     final fin = context.read<FinanceProvider>();
+    final fullAccess = context.read<AuthProvider>().profile?.isFullAccess ?? false;
+    final kasOptions = fin.kasUntuk(fullAccess);
     final ketC = TextEditingController();
     final jmlC = TextEditingController();
     String? kategoriId = fin.kategori.isNotEmpty ? fin.kategori.first.id : null;
-    String? kasId = fin.kas.isNotEmpty ? fin.kas.first.id : null;
+    String? kasId = kasOptions.isNotEmpty ? kasOptions.first.id : null;
 
     showModalBottomSheet(
       context: context,
@@ -91,16 +94,16 @@ class _PengeluaranScreenState extends State<PengeluaranScreen> {
                 TextField(controller: jmlC, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Jumlah (Rp)')),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: kategoriId,
+                  initialValue: kategoriId,
                   decoration: const InputDecoration(labelText: 'Kategori'),
                   items: fin.kategori.map((k) => DropdownMenuItem(value: k.id, child: Text(k.nama))).toList(),
                   onChanged: (v) => setSheet(() => kategoriId = v),
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: kasId,
+                  initialValue: kasId,
                   decoration: const InputDecoration(labelText: 'Kas asal'),
-                  items: fin.kas.map((k) => DropdownMenuItem(value: k.id, child: Text(k.nama))).toList(),
+                  items: kasOptions.map((k) => DropdownMenuItem(value: k.id, child: Text(k.nama))).toList(),
                   onChanged: (v) => setSheet(() => kasId = v),
                 ),
                 const SizedBox(height: 18),

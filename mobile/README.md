@@ -36,8 +36,8 @@ cd mobile
 flutter create --org com.escsiantan --project-name esc_siantan_finance --platforms=android .
 flutter pub get
 flutter run \
-  --dart-define=SUPABASE_URL=https://vtupgtrlsydiunpiqiui.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0dXBndHJsc3lkaXVucGlxaXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMTU1MzYsImV4cCI6MjA5Nzc5MTUzNn0.2r4JjfPYTITgdw5-0hDLxc4QonIV_SnGOBoETCJyI50>
+  --dart-define=SUPABASE_URL=https://nevczzjdvxpqiezqdhox.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ldmN6empkdnhwcWllenFkaG94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NjEzMTQsImV4cCI6MjA5ODIzNzMxNH0.w3auuu4zbhIzmwt33JkI2br34XKn5QnIce_IZT08XyY>
 ```
 
 > Alternatif: edit langsung `defaultValue` di `lib/core/config.dart` bila tidak
@@ -56,7 +56,7 @@ Cara mudah: `powershell -ExecutionPolicy Bypass -File .\build_apk.ps1`
 Manual:
 ```bash
 flutter build apk --release \
-  --dart-define=SUPABASE_URL=https://vtupgtrlsydiunpiqiui.supabase.co \
+  --dart-define=SUPABASE_URL=https://nevczzjdvxpqiezqdhox.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=<ANON_KEY>
 # Output: build/app/outputs/flutter-apk/app-release.apk
 ```

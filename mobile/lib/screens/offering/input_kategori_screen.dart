@@ -2,83 +2,199 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/finance_provider.dart';
 import '../../providers/sesi_draft_provider.dart';
-import 'balancing_signature_screen.dart';
+import 'kartu_biru_screen.dart';
 
-class InputKategoriScreen extends StatelessWidget {
+class InputKategoriScreen extends StatefulWidget {
   const InputKategoriScreen({super.key});
+  @override
+  State<InputKategoriScreen> createState() => _InputKategoriScreenState();
+}
+
+class _InputKategoriScreenState extends State<InputKategoriScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FinanceProvider>().ensureKasKategori();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final draft = context.watch<SesiDraftProvider>();
+    final fin = context.watch<FinanceProvider>();
+    final auth = context.watch<AuthProvider>();
+    final fullAccess = auth.profile?.isFullAccess ?? false;
+    final daftarKategori = fin.kategoriPersembahanUntuk(fullAccess);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Input Kategori')),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Total kategori', style: TextStyle(fontWeight: FontWeight.w600)),
-                  Text(formatRupiah(draft.totalKategori),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text('Fisik: ${formatRupiah(draft.totalFisik)}',
-                    style: TextStyle(color: AppColors.muted, fontSize: 12)),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: draft.totalKategori <= 0
-                      ? null
-                      : () async {
-                          await draft.syncKategori();
-                          if (context.mounted) {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const BalancingSignatureScreen()));
-                          }
-                        },
-                  child: const Text('Lanjut ke balancing'),
+      bottomNavigationBar: _bottomBar(context, draft),
+      body: daftarKategori.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  fin.kategoriPersembahan.isEmpty
+                      ? 'Belum ada kategori persembahan. Hubungi Super Admin untuk menambahkannya di web.'
+                      : 'Anda belum diberi akses kas untuk kategori manapun. Hubungi Super Admin.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.muted),
                 ),
               ),
+            )
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text('Pilih kategori yang dihitung pada sesi ini, lalu isi jumlahnya.',
+                    style: TextStyle(color: AppColors.muted, fontSize: 13)),
+                const SizedBox(height: 12),
+                ...daftarKategori.map((k) => _kategoriCard(draft, k)),
+              ],
+            ),
+    );
+  }
+
+  Widget _kategoriCard(SesiDraftProvider draft, KategoriPersembahan k) {
+    final selected = draft.isKategoriSelected(k.id);
+    final entry = selected ? draft.kategori.firstWhere((e) => e.kategoriId == k.id) : null;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: selected,
+              onChanged: (v) => draft.toggleKategori(k, v ?? false),
+              title: Text(k.nama, style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(k.kasNama != null ? '→ ${k.kasNama}' : 'kas belum diatur',
+                  style: TextStyle(fontSize: 12, color: AppColors.muted)),
+            ),
+            if (selected && entry != null) ...[
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+              entry.butuhNama ? _namaList(draft, entry) : _totalField(draft, entry),
+              const SizedBox(height: 8),
             ],
-          ),
+          ],
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text('Masukkan nominal per kategori persembahan.',
-              style: TextStyle(color: AppColors.muted, fontSize: 13)),
-          const SizedBox(height: 12),
-          ...draft.kategori.map((k) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  child: Row(
-                    children: [
-                      Expanded(child: Text(kOfferingLabels[k.jenis] ?? k.jenis, style: const TextStyle(fontWeight: FontWeight.w600))),
-                      SizedBox(
-                        width: 150,
-                        child: TextFormField(
-                          initialValue: k.jumlah == 0 ? '' : k.jumlah.toStringAsFixed(0),
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.right,
-                          decoration: const InputDecoration(hintText: '0', prefixText: 'Rp ', isDense: true),
-                          onChanged: (v) => draft.setKategori(k.jenis, double.tryParse(v) ?? 0),
-                        ),
-                      ),
-                    ],
+    );
+  }
+
+  Widget _totalField(SesiDraftProvider draft, KategoriEntry entry) {
+    return TextFormField(
+      key: ValueKey('total-${entry.kategoriId}'),
+      initialValue: entry.total == 0 ? '' : entry.total.toStringAsFixed(0),
+      keyboardType: TextInputType.number,
+      decoration: const InputDecoration(prefixText: 'Rp ', hintText: '0', isDense: true),
+      onChanged: (v) => draft.setKategoriTotal(entry.kategoriId, double.tryParse(v) ?? 0),
+    );
+  }
+
+  Widget _namaList(SesiDraftProvider draft, KategoriEntry entry) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...entry.items.asMap().entries.map((e) {
+          final i = e.key;
+          final item = e.value;
+          // Key dipakai berdasar identitas objek (bukan index) agar TextFormField
+          // tidak salah pasang nilai ketika sebuah baris di tengah dihapus.
+          final keyId = identityHashCode(item);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextFormField(
+                    key: ValueKey('nama-$keyId'),
+                    initialValue: item.nama,
+                    decoration: const InputDecoration(hintText: 'Nama (opsional)', isDense: true),
+                    onChanged: (v) => draft.setNamaItem(entry.kategoriId, i, nama: v),
                   ),
                 ),
-              )),
-        ],
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    key: ValueKey('jumlah-$keyId'),
+                    initialValue: item.jumlah == 0 ? '' : item.jumlah.toStringAsFixed(0),
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(prefixText: 'Rp ', hintText: '0', isDense: true),
+                    onChanged: (v) => draft.setNamaItem(entry.kategoriId, i, jumlah: double.tryParse(v) ?? 0),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () => draft.removeNamaItem(entry.kategoriId, i),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                ),
+              ],
+            ),
+          );
+        }),
+        TextButton.icon(
+          onPressed: () => draft.addNamaItem(entry.kategoriId),
+          icon: const Icon(Icons.add, size: 16),
+          label: const Text('Tambah nama'),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text('Subtotal: ${formatRupiah(entry.jumlah)}',
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        ),
+      ],
+    );
+  }
+
+  Widget _bottomBar(BuildContext context, SesiDraftProvider draft) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total kategori', style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(formatRupiah(draft.totalKategori),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text('Fisik: ${formatRupiah(draft.totalFisik)}',
+                  style: TextStyle(color: AppColors.muted, fontSize: 12)),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: draft.totalKategori <= 0
+                    ? null
+                    : () async {
+                        await draft.syncKategori();
+                        if (context.mounted) {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuBiruScreen()));
+                        }
+                      },
+                child: const Text('Lanjut ke kartu biru'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

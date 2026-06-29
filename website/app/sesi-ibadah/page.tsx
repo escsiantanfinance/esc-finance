@@ -52,7 +52,7 @@ export default function SesiIbadahPage() {
                   return (
                     <tr key={s.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 whitespace-nowrap">{formatTanggal(s.tanggal)}{s.jam ? `, ${s.jam.slice(0, 5)}` : ''}</td>
-                      <td className="px-4 py-3 font-medium">{s.jenis_ibadah}</td>
+                      <td className="px-4 py-3 font-medium">{s.nama_sesi || s.jenis_ibadah}{s.nama_sesi ? <span className="block text-xs font-normal text-gray-400">{s.jenis_ibadah}</span> : null}</td>
                       <td className="px-4 py-3 text-gray-500">{s.kas?.nama ?? '-'}</td>
                       <td className="px-4 py-3 font-semibold">{formatRupiah(s.total_fisik)}</td>
                       <td className="px-4 py-3">

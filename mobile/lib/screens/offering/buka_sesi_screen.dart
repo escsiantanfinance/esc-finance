@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme.dart';
 import '../../providers/finance_provider.dart';
 import '../../providers/sesi_draft_provider.dart';
 import 'kalkulator_denominasi_screen.dart';
@@ -17,26 +16,36 @@ class BukaSesiScreen extends StatefulWidget {
 }
 
 class _BukaSesiScreenState extends State<BukaSesiScreen> {
+  final _namaSesiCtrl = TextEditingController();
   String _jenis = _jenisOptions.first;
   DateTime _tanggal = DateTime.now();
   TimeOfDay? _jam;
-  String? _kasId;
   bool _loading = false;
 
   @override
-  Widget build(BuildContext context) {
-    final fin = context.watch<FinanceProvider>();
-    _kasId ??= fin.kas.isNotEmpty ? fin.kas.first.id : null;
+  void dispose() {
+    _namaSesiCtrl.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Buka Sesi Ibadah')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const Text('Nama sesi', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _namaSesiCtrl,
+            decoration: const InputDecoration(hintText: 'mis. Persembahan Pagi'),
+          ),
+          const SizedBox(height: 16),
           const Text('Jenis ibadah', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _jenis,
+            initialValue: _jenis,
             items: _jenisOptions.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
             onChanged: (v) => setState(() => _jenis = v!),
           ),
@@ -71,14 +80,6 @@ class _BukaSesiScreenState extends State<BukaSesiScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          const Text('Kas tujuan', style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _kasId,
-            items: fin.kas.map((k) => DropdownMenuItem(value: k.id, child: Text(k.nama))).toList(),
-            onChanged: (v) => setState(() => _kasId = v),
-          ),
           const SizedBox(height: 28),
           ElevatedButton.icon(
             onPressed: _loading ? null : _mulai,
@@ -91,15 +92,22 @@ class _BukaSesiScreenState extends State<BukaSesiScreen> {
   }
 
   Future<void> _mulai() async {
+    if (_namaSesiCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nama sesi wajib diisi')));
+      return;
+    }
     setState(() => _loading = true);
     final draft = context.read<SesiDraftProvider>();
+    final namaSesi = _namaSesiCtrl.text.trim();
     final tanggalStr = _tanggal.toIso8601String().substring(0, 10);
     final jamStr = _jam == null ? null : '${_jam!.hour.toString().padLeft(2, '0')}:${_jam!.minute.toString().padLeft(2, '0')}';
     try {
       final id = await draft.repo.createSesi(
-        jenisIbadah: _jenis, tanggal: tanggalStr, jam: jamStr, kasId: _kasId,
+        namaSesi: namaSesi, jenisIbadah: _jenis, tanggal: tanggalStr, jam: jamStr,
       );
-      draft.startNew(sesiId: id, jenisIbadah: _jenis, tanggal: tanggalStr, jam: jamStr, kasId: _kasId);
+      draft.startNew(sesiId: id, namaSesi: namaSesi, jenisIbadah: _jenis, tanggal: tanggalStr, jam: jamStr);
+      if (!mounted) return;
+      await context.read<FinanceProvider>().ensureKasKategori();
       if (!mounted) return;
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const KalkulatorDenominasiScreen()));
     } catch (e) {
