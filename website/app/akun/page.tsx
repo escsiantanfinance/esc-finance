@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, type Kas, type Akun } from '@/lib/supabase'
+import ScopeBanner from '@/components/ScopeBanner'
 
 const TIPE_BADGE: Record<string, string> = {
   aset: 'bg-blue-100 text-blue-700', kewajiban: 'bg-amber-100 text-amber-700',
@@ -106,6 +107,7 @@ export default function AkunKasPage() {
 
   return (
     <main className="flex-1 p-8">
+        <ScopeBanner />
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Akun &amp; Kas</h1>

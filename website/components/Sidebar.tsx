@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase, type UserRole } from '@/lib/supabase'
 
-type Visibility = 'all' | 'staff' | 'admin' | 'super'
+type Visibility = 'all' | 'staff' | 'admin' | 'super' | 'oversight'
 type NavItem = { href: string; label: string; icon: string; vis: Visibility }
 
 const navGroups: { title: string; items: NavItem[] }[] = [
@@ -23,9 +23,9 @@ const navGroups: { title: string; items: NavItem[] }[] = [
     title: 'Akuntansi',
     items: [
       { href: '/akun', label: 'Akun & Kas', icon: '💳', vis: 'staff' },
-      { href: '/analitik-kas', label: 'Analitik Kas', icon: '📈', vis: 'staff' },
-      { href: '/jurnal', label: 'Jurnal Umum', icon: '📒', vis: 'staff' },
-      { href: '/laporan', label: 'Laporan', icon: '📊', vis: 'all' },
+      { href: '/analitik-kas', label: 'Analitik Kas', icon: '📈', vis: 'oversight' },
+      { href: '/jurnal', label: 'Jurnal Umum', icon: '📒', vis: 'oversight' },
+      { href: '/laporan', label: 'Laporan', icon: '📊', vis: 'oversight' },
     ],
   },
   {
@@ -69,6 +69,7 @@ export default function Sidebar() {
     if (vis === 'staff') return isStaff
     if (vis === 'admin') return role === 'admin'
     if (vis === 'super') return isSuper
+    if (vis === 'oversight') return role !== 'bendahara' // laporan resmi seluruh-gereja: bukan ranah bendahara
     return false
   }
 

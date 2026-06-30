@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, formatTanggal, type Persembahan } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
+import ScopeBanner from '@/components/ScopeBanner'
 
 export default function PersembahanPage() {
   const [data, setData] = useState<Persembahan[]>([])
@@ -41,6 +42,7 @@ export default function PersembahanPage() {
 
   return (
     <main className="flex-1 p-8">
+        <ScopeBanner />
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Persembahan</h1>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, formatTanggal, type Pengeluaran } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
 import { RowAction, RowActions } from '@/components/RowAction'
+import ScopeBanner from '@/components/ScopeBanner'
 
 const statusStyle: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -117,6 +118,7 @@ export default function PengeluaranPage() {
 
   return (
     <main className="flex-1 p-8">
+        <ScopeBanner />
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Pengeluaran</h1>

@@ -740,15 +740,24 @@ LEFT JOIN jurnal_umum_detail d ON d.akun_id = a.id
 LEFT JOIN jurnal_umum j ON j.id = d.jurnal_id
 GROUP BY k.id, k.nama, k.tipe, k.saldo_saat_ini, DATE_TRUNC('month', j.tanggal);
 
--- Status Perpuluhan per anggota per periode (PRD §5C) — auto-mark
+-- Status Perpuluhan per anggota per periode (PRD §5C) — auto-mark.
+-- SECURITY DEFINER agar checklist tetap whole-church (oversight) walau RLS
+-- persembahan dibatasi per-kas utk bendahara di bawah — lihat §ROW LEVEL SECURITY.
+CREATE OR REPLACE FUNCTION cek_sudah_perpuluhan(p_anggota UUID, p_tahun INT, p_bulan INT)
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (SELECT 1 FROM persembahan p
+    JOIN kategori_persembahan kp ON kp.id = p.kategori_id
+    WHERE p.anggota_id = p_anggota AND kp.is_perpuluhan
+      AND EXTRACT(YEAR FROM p.tanggal) = p_tahun AND EXTRACT(MONTH FROM p.tanggal) = p_bulan);
+$$;
+
 CREATE VIEW v_status_perpuluhan AS
 SELECT an.id AS anggota_id, an.nama, an.kontak, an.divisi_pelayanan, an.is_volunteer,
        per.tahun, per.bulan,
-       EXISTS (SELECT 1 FROM persembahan p
-         JOIN kategori_persembahan kp ON kp.id = p.kategori_id
-         WHERE p.anggota_id = an.id AND kp.is_perpuluhan
-           AND EXTRACT(YEAR FROM p.tanggal) = per.tahun
-           AND EXTRACT(MONTH FROM p.tanggal) = per.bulan) AS sudah_mengembalikan
+       cek_sudah_perpuluhan(an.id, per.tahun, per.bulan) AS sudah_mengembalikan
 FROM anggota an
 CROSS JOIN (
   SELECT EXTRACT(YEAR FROM d)::int AS tahun, EXTRACT(MONTH FROM d)::int AS bulan
@@ -821,14 +830,63 @@ AS $$
       OR EXISTS (SELECT 1 FROM public.kas_akses ka WHERE ka.kas_id = p_kas AND ka.user_id = auth.uid());
 $$;
 
+-- Boleh LIHAT data terkait kas ini: Admin/Super Admin/Majelis/Volunteer selalu;
+-- Bendahara hanya kas yang ditugaskan padanya (kas_akses). Dipakai utk SELECT
+-- (bukan tulis — tulis tetap pakai punya_akses_kas langsung).
+CREATE OR REPLACE FUNCTION lihat_kas(p_kas UUID)
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT CASE
+    WHEN p_kas IS NULL THEN true
+    WHEN (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'bendahara' THEN punya_akses_kas(p_kas)
+    ELSE true
+  END;
+$$;
+
+-- Boleh lihat sesi ini: non-bendahara selalu; bendahara hanya bila sesi
+-- bertaut kas yang ia akses (lewat persembahan/pengeluaran), atau sesi yang
+-- baru ia buka sendiri (belum ada persembahan sama sekali).
+CREATE OR REPLACE FUNCTION lihat_sesi(p_sesi_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT CASE
+    WHEN (SELECT role FROM public.profiles WHERE id = auth.uid()) <> 'bendahara' THEN true
+    ELSE
+      EXISTS (SELECT 1 FROM persembahan p WHERE p.sesi_id = p_sesi_id AND punya_akses_kas(p.kas_id))
+      OR EXISTS (SELECT 1 FROM pengeluaran pe WHERE pe.sesi_id = p_sesi_id AND punya_akses_kas(pe.kas_id))
+      OR EXISTS (SELECT 1 FROM sesi_ibadah s WHERE s.id = p_sesi_id AND s.dibuka_oleh = auth.uid())
+  END;
+$$;
+
+-- Boleh lihat baris jurnal otomatis ini: non-bendahara selalu; bendahara
+-- hanya bila transaksi sumbernya (persembahan/pengeluaran) bertaut kas yg ia
+-- akses. Jurnal manual dicek terpisah di policy (lihat dicatat_oleh).
+CREATE OR REPLACE FUNCTION lihat_jurnal(p_sumber jurnal_sumber, p_sumber_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT CASE
+    WHEN (SELECT role FROM public.profiles WHERE id = auth.uid()) <> 'bendahara' THEN true
+    WHEN p_sumber = 'persembahan' THEN EXISTS (SELECT 1 FROM persembahan p WHERE p.id = p_sumber_id AND punya_akses_kas(p.kas_id))
+    WHEN p_sumber = 'pengeluaran' THEN EXISTS (SELECT 1 FROM pengeluaran pe WHERE pe.id = p_sumber_id AND punya_akses_kas(pe.kas_id))
+    ELSE false
+  END;
+$$;
+
 CREATE POLICY p_profiles_select ON profiles FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY p_profiles_update ON profiles FOR UPDATE USING (auth.uid() = id OR is_admin() OR is_superadmin());
 
 CREATE POLICY p_akun_select ON akun FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY p_akun_manage ON akun FOR ALL USING (is_admin() OR is_superadmin()) WITH CHECK (is_admin() OR is_superadmin());
 
--- Kas hanya dikelola Super Admin (tambah/kurang); semua boleh lihat.
-CREATE POLICY p_kas_select ON kas FOR SELECT USING (auth.role() = 'authenticated');
+-- Kas hanya dikelola Super Admin (tambah/kurang); lihat dibatasi lihat_kas
+-- (bendahara hanya kas yang ditugaskan; peran lain lihat semua).
+CREATE POLICY p_kas_select ON kas FOR SELECT USING (auth.role() = 'authenticated' AND lihat_kas(id));
 CREATE POLICY p_kas_manage ON kas FOR ALL USING (is_superadmin()) WITH CHECK (is_superadmin());
 
 -- kas_akses: user lihat barisnya sendiri; Super Admin kelola semua.
@@ -845,19 +903,28 @@ CREATE POLICY p_kat_manage ON kategori_pengeluaran FOR ALL USING (is_admin() OR 
 CREATE POLICY p_anggota_select ON anggota FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY p_anggota_manage ON anggota FOR ALL USING (is_staff()) WITH CHECK (is_staff());
 
-CREATE POLICY p_sesi_select ON sesi_ibadah FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY p_sesi_manage ON sesi_ibadah FOR ALL USING (is_staff()) WITH CHECK (is_staff());
+-- Sesi: lihat dibatasi lihat_sesi (bendahara hanya sesi bertaut kas yg ia
+-- akses, atau sesi yg baru ia buka sendiri). Tulis tetap is_staff() — sesi
+-- baru belum tentu bertaut kas spesifik di saat dibuat.
+CREATE POLICY p_sesi_select ON sesi_ibadah FOR SELECT USING (auth.role() = 'authenticated' AND lihat_sesi(id));
+CREATE POLICY p_sesi_insert ON sesi_ibadah FOR INSERT WITH CHECK (is_staff());
+CREATE POLICY p_sesi_update ON sesi_ibadah FOR UPDATE USING (is_staff() AND lihat_sesi(id)) WITH CHECK (is_staff());
+CREATE POLICY p_sesi_delete ON sesi_ibadah FOR DELETE USING (is_staff() AND lihat_sesi(id));
 
-CREATE POLICY p_pecahan_select ON sesi_pecahan FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY p_pecahan_select ON sesi_pecahan FOR SELECT USING (auth.role() = 'authenticated' AND lihat_sesi(sesi_id));
 CREATE POLICY p_pecahan_manage ON sesi_pecahan FOR ALL USING (is_staff()) WITH CHECK (is_staff());
 
--- Persembahan: bendahara hanya boleh untuk kas yang ia akses.
-CREATE POLICY p_persembahan_select ON persembahan FOR SELECT USING (auth.role() = 'authenticated');
+-- Persembahan: bendahara hanya boleh untuk kas yang ia akses (baca & tulis).
+CREATE POLICY p_persembahan_select ON persembahan FOR SELECT USING (auth.role() = 'authenticated' AND lihat_kas(kas_id));
 CREATE POLICY p_persembahan_manage ON persembahan FOR ALL
   USING (punya_akses_kas(kas_id)) WITH CHECK (punya_akses_kas(kas_id));
 
 -- Pengeluaran: ajukan (insert) utk kas yang diakses; ACC (update) oleh approver.
-CREATE POLICY p_pengeluaran_select ON pengeluaran FOR SELECT USING (auth.role() = 'authenticated');
+-- Lihat: kas yang diakses, atau pengeluaran yang diajukan sendiri (mis. saat
+-- kas-nya direvisi belakangan, pengaju tetap bisa lihat status pengajuannya).
+CREATE POLICY p_pengeluaran_select ON pengeluaran FOR SELECT USING (
+  auth.role() = 'authenticated' AND (lihat_kas(kas_id) OR diajukan_oleh = auth.uid())
+);
 CREATE POLICY p_pengeluaran_insert ON pengeluaran FOR INSERT WITH CHECK (punya_akses_kas(kas_id));
 CREATE POLICY p_pengeluaran_update ON pengeluaran FOR UPDATE
   USING (boleh_approve() OR diajukan_oleh = auth.uid());
@@ -866,9 +933,20 @@ CREATE POLICY p_pengeluaran_delete ON pengeluaran FOR DELETE USING (boleh_approv
 CREATE POLICY p_anggaran_select ON anggaran FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY p_anggaran_manage ON anggaran FOR ALL USING (is_staff()) WITH CHECK (is_staff());
 
-CREATE POLICY p_jurnal_select ON jurnal_umum FOR SELECT USING (auth.role() = 'authenticated');
+-- Jurnal otomatis: bendahara hanya lihat entri dari kas yg ia akses; entri
+-- manual hanya yg ia catat sendiri. Tulis (manual) tetap is_staff().
+CREATE POLICY p_jurnal_select ON jurnal_umum FOR SELECT USING (
+  auth.role() = 'authenticated' AND (
+    (sumber = 'manual' AND dicatat_oleh = auth.uid()) OR lihat_jurnal(sumber, sumber_id)
+  )
+);
 CREATE POLICY p_jurnal_manage ON jurnal_umum FOR ALL USING (is_staff()) WITH CHECK (is_staff());
-CREATE POLICY p_jurnald_select ON jurnal_umum_detail FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY p_jurnald_select ON jurnal_umum_detail FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM jurnal_umum j WHERE j.id = jurnal_id
+    AND ((j.sumber = 'manual' AND j.dicatat_oleh = auth.uid()) OR lihat_jurnal(j.sumber, j.sumber_id))
+  )
+);
 CREATE POLICY p_jurnald_manage ON jurnal_umum_detail FOR ALL USING (is_staff()) WITH CHECK (is_staff());
 
 CREATE POLICY p_logbackup_super ON log_backup FOR ALL USING (is_superadmin()) WITH CHECK (is_superadmin());

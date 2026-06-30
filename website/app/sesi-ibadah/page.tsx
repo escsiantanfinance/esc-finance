@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, formatTanggal, type SesiIbadah } from '@/lib/supabase'
 import { RowAction, RowActions } from '@/components/RowAction'
+import ScopeBanner from '@/components/ScopeBanner'
 
 const STATUS_BADGE: Record<string, { c: string; t: string }> = {
   draft: { c: 'bg-amber-100 text-amber-700', t: 'Draft' },
@@ -34,6 +35,7 @@ export default function SesiIbadahPage() {
 
   return (
     <main className="flex-1 p-8">
+        <ScopeBanner />
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Sesi Ibadah</h1>
           <p className="text-gray-500 mt-1">Rekonsiliasi kas pasca-ibadah (dari aplikasi mobile)</p>
