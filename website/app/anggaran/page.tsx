@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
+import { RowAction, RowActions } from '@/components/RowAction'
 
 const BULAN = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
@@ -191,8 +192,10 @@ export default function AnggaranPage() {
                             </div>
                           </td>
                           <td className="px-3 py-3 text-right whitespace-nowrap">
-                            <button onClick={() => openEdit(row)} className="text-blue-600 hover:underline text-xs font-medium mr-3">Edit</button>
-                            <button onClick={() => delAnggaran(row.anggaran_id, row.nama_pos)} className="text-red-500 hover:underline text-xs font-medium">Hapus</button>
+                            <RowActions>
+                              <RowAction onClick={() => openEdit(row)}>Edit</RowAction>
+                              <RowAction variant="danger" onClick={() => delAnggaran(row.anggaran_id, row.nama_pos)}>Hapus</RowAction>
+                            </RowActions>
                           </td>
                         </tr>
                       )

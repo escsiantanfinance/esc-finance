@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { supabase, formatRupiah, formatTanggal, type SesiIbadah } from '@/lib/supabase'
+import { RowAction, RowActions } from '@/components/RowAction'
 
 const STATUS_BADGE: Record<string, { c: string; t: string }> = {
   draft: { c: 'bg-amber-100 text-amber-700', t: 'Draft' },
@@ -60,10 +60,12 @@ export default function SesiIbadahPage() {
                       </td>
                       <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[s.status]?.c}`}>{STATUS_BADGE[s.status]?.t}</span></td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <Link href={`/sesi-ibadah/${s.id}`} className="text-blue-700 font-medium text-xs hover:underline">Lihat</Link>
-                        {s.status !== 'signed_locked' && (
-                          <button onClick={() => delSesi(s)} className="text-red-500 font-medium text-xs hover:underline ml-3">Hapus</button>
-                        )}
+                        <RowActions>
+                          <RowAction href={`/sesi-ibadah/${s.id}`}>Lihat</RowAction>
+                          {s.status !== 'signed_locked' && (
+                            <RowAction variant="danger" onClick={() => delSesi(s)}>Hapus</RowAction>
+                          )}
+                        </RowActions>
                       </td>
                     </tr>
                   )

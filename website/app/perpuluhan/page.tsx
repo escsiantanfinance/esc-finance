@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
+import ImportModal from './ImportModal'
 
 const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
@@ -13,6 +14,7 @@ export default function PerpuluhanPage() {
   const [filter, setFilter] = useState<'semua' | 'sudah' | 'belum'>('semua')
   const [loading, setLoading] = useState(true)
   const [show, setShow] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [form, setForm] = useState({ nama: '', kontak: '', divisi_pelayanan: '', is_volunteer: true })
 
   async function load() {
@@ -60,8 +62,9 @@ export default function PerpuluhanPage() {
             <select value={tahun} onChange={e => setTahun(Number(e.target.value))} className="border rounded-xl px-3 py-2 text-sm">
               {[now.getFullYear() - 1, now.getFullYear()].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            <button onClick={handleExport} className="border border-gray-300 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">⬇ Export</button>
-            <button onClick={() => setShow(true)} className="bg-blue-700 text-white rounded-xl px-4 py-2 text-sm font-semibold">+ Anggota</button>
+            <button onClick={handleExport} className="border border-gray-300 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">⬇ Export</button>
+            <button onClick={() => setShowImport(true)} className="border border-blue-300 text-blue-700 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-blue-50">⬆ Import Excel</button>
+            <button onClick={() => setShow(true)} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Anggota</button>
           </div>
         </div>
 
@@ -117,6 +120,10 @@ export default function PerpuluhanPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {showImport && (
+          <ImportModal tahun={tahun} bulan={bulan} onClose={() => setShowImport(false)} onImported={load} />
         )}
     </main>
   )

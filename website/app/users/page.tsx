@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase, formatTanggal } from '@/lib/supabase'
+import { RowAction } from '@/components/RowAction'
 
 const ROLE_BADGE: Record<string, string> = {
   admin: 'bg-violet-100 text-violet-700', bendahara: 'bg-blue-100 text-blue-700',
@@ -134,14 +135,14 @@ export default function UsersPage() {
                     </td>
                     <td className="px-5 py-3">
                       {isProtected ? <span className="text-xs text-gray-400">semua kas</span> :
-                        isSuper ? <button onClick={() => openAccess(u)} className="text-blue-700 hover:underline text-xs font-medium">Atur akses…</button>
+                        isSuper ? <RowAction onClick={() => openAccess(u)}>Atur akses…</RowAction>
                         : <span className="text-xs text-gray-300">—</span>}
                     </td>
                     <td className="px-5 py-3 text-gray-500">{u.last_sign_in_at ? formatTanggal(u.last_sign_in_at) : 'belum pernah'}</td>
                     <td className="px-5 py-3">
                       {isProtected
                         ? <span className="text-xs text-gray-300">terlindungi</span>
-                        : <button onClick={() => delUser(u.id, u.email)} className="text-red-500 hover:underline text-xs font-medium">Hapus</button>}
+                        : <RowAction variant="danger" onClick={() => delUser(u.id, u.email)}>Hapus</RowAction>}
                     </td>
                   </tr>
                 )

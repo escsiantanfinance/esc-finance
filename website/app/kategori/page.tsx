@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase, type KategoriPersembahan, type Kas, type Akun } from '@/lib/supabase'
+import { RowAction } from '@/components/RowAction'
 
 const emptyForm = {
   nama: '', kas_id: '', akun_pendapatan_id: '',
@@ -118,7 +119,7 @@ export default function KategoriPersembahanPage() {
                   <td className="px-5 py-3">{k.butuh_nama ? <span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">ya</span> : <span className="text-gray-300 text-xs">tidak</span>}</td>
                   <td className="px-5 py-3">{k.is_perpuluhan ? <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">ya</span> : <span className="text-gray-300 text-xs">—</span>}</td>
                   <td className="px-5 py-3">{k.is_aktif ? <span className="text-xs text-green-600">aktif</span> : <span className="text-xs text-red-500">nonaktif</span>}</td>
-                  <td className="px-5 py-3 text-right"><button onClick={() => openEdit(k)} className="text-blue-700 hover:underline text-xs font-medium">Ubah</button></td>
+                  <td className="px-5 py-3 text-right"><RowAction onClick={() => openEdit(k)}>Ubah</RowAction></td>
                 </tr>
               ))}
           </tbody>

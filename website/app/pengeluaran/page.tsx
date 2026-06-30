@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, formatTanggal, type Pengeluaran } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
+import { RowAction, RowActions } from '@/components/RowAction'
 
 const statusStyle: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -162,10 +163,10 @@ export default function PengeluaranPage() {
                   </td>
                   <td className="px-4 py-3">
                     {row.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <button onClick={() => approve(row.id)} className="text-green-600 hover:underline text-xs font-medium">✓ Setujui</button>
-                        <button onClick={() => reject(row.id)} className="text-red-500 hover:underline text-xs font-medium">✗ Tolak</button>
-                      </div>
+                      <RowActions>
+                        <RowAction variant="success" onClick={() => approve(row.id)}>✓ Setujui</RowAction>
+                        <RowAction variant="danger" onClick={() => reject(row.id)}>✗ Tolak</RowAction>
+                      </RowActions>
                     )}
                   </td>
                 </tr>
