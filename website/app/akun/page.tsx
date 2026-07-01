@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, type Kas, type Akun } from '@/lib/supabase'
+import toast from 'react-hot-toast'
 import ScopeBanner from '@/components/ScopeBanner'
 
 const TIPE_BADGE: Record<string, string> = {
@@ -45,11 +46,12 @@ export default function AkunKasPage() {
     const { error } = await supabase.from('kas').delete().eq('id', edit.id)
     setSaving(false)
     if (error) {
-      alert(/foreign key|violates|constraint/i.test(error.message)
-        ? 'Kas ini masih punya transaksi (persembahan/pengeluaran), jadi tidak bisa dihapus. Nonaktifkan saja lewat centang "Kas aktif".'
+      toast.error(/foreign key|violates|constraint/i.test(error.message)
+        ? 'Kas ini masih punya transaksi, tidak bisa dihapus. Nonaktifkan saja.'
         : 'Gagal menghapus: ' + error.message)
       return
     }
+    toast.success('Kas berhasil dihapus!')
     setEdit(null); load()
   }
 
@@ -79,14 +81,15 @@ export default function AkunKasPage() {
       is_aktif: editForm.is_aktif,
     }).eq('id', edit.id)
     setSaving(false)
-    if (error) { alert('Gagal menyimpan: ' + error.message); return }
+    if (error) { toast.error('Gagal menyimpan: ' + error.message); return }
+    toast.success('Perubahan kas berhasil disimpan!')
     setEdit(null); load()
   }
 
   const asetAkun = akun.filter(a => a.tipe === 'aset' && !a.is_header)
 
   async function addKas() {
-    if (!form.nama) { alert('Nama kas wajib diisi'); return }
+    if (!form.nama) { toast.error('Nama kas wajib diisi'); return }
     setSaving(true)
     const saldo = Number(form.saldo_awal || 0)
     const { error } = await supabase.from('kas').insert({
@@ -99,7 +102,8 @@ export default function AkunKasPage() {
       penanggung_jawab: form.penanggung_jawab || null,
     })
     setSaving(false)
-    if (error) { alert('Gagal menambah kas: ' + error.message); return }
+    if (error) { toast.error('Gagal menambah kas: ' + error.message); return }
+    toast.success('Kas baru berhasil ditambahkan!')
     setShowAdd(false)
     setForm({ nama: '', tipe: 'tunai', saldo_awal: '', akun_id: '', nomor_rekening: '', penanggung_jawab: '' })
     load()

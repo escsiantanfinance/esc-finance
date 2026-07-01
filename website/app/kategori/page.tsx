@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, type KategoriPersembahan, type Kas, type Akun } from '@/lib/supabase'
 import { RowAction } from '@/components/RowAction'
+import toast from 'react-hot-toast'
 
 const emptyForm = {
   nama: '', kas_id: '', akun_pendapatan_id: '',
@@ -66,7 +67,8 @@ export default function KategoriPersembahanPage() {
       ? await supabase.from('kategori_persembahan').update(payload).eq('id', edit.id)
       : await supabase.from('kategori_persembahan').insert(payload)
     setSaving(false)
-    if (error) { alert('Gagal menyimpan: ' + error.message); return }
+    if (error) { toast.error('Gagal menyimpan: ' + error.message); return }
+    toast.success('Kategori berhasil disimpan!')
     setShow(false); load()
   }
 
@@ -77,11 +79,12 @@ export default function KategoriPersembahanPage() {
     const { error } = await supabase.from('kategori_persembahan').delete().eq('id', edit.id)
     setSaving(false)
     if (error) {
-      alert(/foreign key|violates|constraint/i.test(error.message)
+      toast.error(/foreign key|violates|constraint/i.test(error.message)
         ? 'Kategori ini sudah dipakai di persembahan, jadi tidak bisa dihapus. Nonaktifkan saja (hilangkan centang "Aktif").'
         : 'Gagal menghapus: ' + error.message)
       return
     }
+    toast.success('Kategori berhasil dihapus!')
     setShow(false); load()
   }
 
