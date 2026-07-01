@@ -28,6 +28,7 @@ export default function AnggaranPage() {
     setData(rows ?? [])
     setLoading(false)
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [tahun])
   useEffect(() => {
     supabase.from('kategori_pengeluaran').select('id,nama').eq('is_active', true).order('nama')

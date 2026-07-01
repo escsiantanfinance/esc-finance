@@ -24,6 +24,7 @@ export default function PerpuluhanPage() {
     setRows(data ?? [])
     setLoading(false)
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [tahun, bulan])
 
   const filtered = rows.filter(r => filter === 'semua' || (filter === 'sudah' ? r.sudah_mengembalikan : !r.sudah_mengembalikan))
@@ -102,7 +103,7 @@ export default function PerpuluhanPage() {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-gray-400 mt-3">ℹ️ Status otomatis menjadi "Sudah" begitu persembahan berkategori Perpuluhan yang ditautkan ke anggota dicatat pada periode ini.</p>
+        <p className="text-xs text-gray-400 mt-3">ℹ️ Status otomatis menjadi &quot;Sudah&quot; begitu persembahan berkategori Perpuluhan yang ditautkan ke anggota dicatat pada periode ini.</p>
 
         {show && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setShow(false)}>

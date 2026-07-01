@@ -39,6 +39,7 @@ export default function PengeluaranPage() {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [filter])
   useEffect(() => {
     async function refs() {
