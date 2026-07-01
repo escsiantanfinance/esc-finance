@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {/* Chart */}
-              <div className="bg-white rounded-2xl shadow-sm border p-6">
+              <div className="bg-white rounded-2xl shadow-soft border p-6">
                 <h2 className="font-semibold text-lg mb-4">Trend Pemasukan 6 Bulan</h2>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={chartData}>
@@ -79,7 +79,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Pending approvals */}
-              <div className="bg-white rounded-2xl shadow-sm border p-6">
+              <div className="bg-white rounded-2xl shadow-soft border p-6">
                 <h2 className="font-semibold text-lg mb-4">Menunggu Persetujuan</h2>
                 {pending.length === 0 ? (
                   <p className="text-gray-400 text-center py-8">Tidak ada pengeluaran pending</p>

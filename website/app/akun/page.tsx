@@ -118,14 +118,14 @@ export default function AkunKasPage() {
             <h1 className="text-3xl font-bold text-gray-900">Akun &amp; Kas</h1>
             <p className="text-gray-500 mt-1">Manajemen multi-kas &amp; Bagan Akun (COA)</p>
           </div>
-          {isSuper && <button onClick={() => setShowAdd(true)} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Kas</button>}
+          {isSuper && <button onClick={() => setShowAdd(true)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Kas</button>}
         </div>
 
         {/* Kas cards — klik untuk ubah/nonaktifkan */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {kas.map(k => (
             <button key={k.id} onClick={() => openEdit(k)} title="Klik untuk ubah / nonaktifkan"
-              className={`text-left bg-white rounded-2xl border shadow-sm p-5 hover:border-blue-400 hover:shadow transition-all ${!k.is_aktif ? 'opacity-60' : ''}`}>
+              className={`text-left bg-white rounded-2xl border shadow-soft p-5 hover:border-blue-400 hover:shadow transition-all ${!k.is_aktif ? 'opacity-60' : ''}`}>
               <div className="flex items-center justify-between">
                 <p className="font-semibold text-gray-800">{k.nama}</p>
                 <div className="flex items-center gap-1">
@@ -141,10 +141,10 @@ export default function AkunKasPage() {
         </div>
 
         {/* COA */}
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
           <div className="px-5 py-3 border-b bg-gray-50"><h2 className="font-semibold text-gray-700">Bagan Akun (Chart of Accounts)</h2></div>
           <table className="w-full text-sm">
-            <thead className="bg-white border-b">
+            <thead className="bg-gray-50 border-b">
               <tr>{['Kode', 'Nama Akun', 'Tipe', 'Saldo Normal'].map(h => <th key={h} className="text-left px-5 py-2.5 font-semibold text-gray-500 text-xs">{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -181,7 +181,7 @@ export default function AkunKasPage() {
               </div>
               <div className="flex gap-2 mt-5">
                 <button onClick={() => setShowAdd(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={addKas} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
+                <button onClick={addKas} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
               </div>
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function AkunKasPage() {
               <div className="flex gap-2 mt-5">
                 {isSuper && <button onClick={delKas} disabled={saving} className="border border-red-300 text-red-600 rounded-xl px-4 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-60">🗑 Hapus</button>}
                 <button onClick={() => setEdit(null)} className="flex-1 border rounded-xl py-2 text-sm font-medium">{isSuper ? 'Batal' : 'Tutup'}</button>
-                {isSuper && <button onClick={saveEdit} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan perubahan'}</button>}
+                {isSuper && <button onClick={saveEdit} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan perubahan'}</button>}
               </div>
               {isSuper && <p className="text-[11px] text-gray-400 mt-2">Hapus hanya untuk Super Admin & kas tanpa transaksi. Untuk kas berisi data, gunakan nonaktifkan.</p>}
             </div>

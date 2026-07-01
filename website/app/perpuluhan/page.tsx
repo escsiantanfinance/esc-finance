@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
-import ImportModal from './ImportModal'
+import ImportModal from './_components/ImportModal'
 
 const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
@@ -78,7 +78,7 @@ export default function PerpuluhanPage() {
             </select>
             <button onClick={handleExport} className="border border-gray-300 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">⬇ Export</button>
             <button onClick={() => setShowImport(true)} className="border border-blue-300 text-blue-700 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-blue-50">⬆ Import Excel</button>
-            <button onClick={() => setShow(true)} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Anggota</button>
+            <button onClick={() => setShow(true)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Anggota</button>
           </div>
         </div>
 
@@ -104,7 +104,7 @@ export default function PerpuluhanPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b"><tr>{['Nama', 'Divisi', 'Kontak', 'Status'].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-gray-100">
@@ -139,7 +139,7 @@ export default function PerpuluhanPage() {
               </div>
               <div className="flex gap-2 mt-5">
                 <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={addAnggota} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold">Simpan</button>
+                <button onClick={addAnggota} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold">Simpan</button>
               </div>
             </div>
           </div>

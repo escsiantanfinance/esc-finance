@@ -78,7 +78,7 @@ export default function AnalitikKasPage() {
           <>
             {/* Ringkasan */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-700 text-white rounded-2xl p-5">
+              <div className="bg-blue-600 text-white rounded-2xl p-5">
                 <p className="text-blue-200 text-sm">Saldo {sel === 'all' ? 'total (aktif)' : 'kas ini'}</p>
                 <p className="text-2xl font-bold">{formatRupiah(totalSaldo)}</p>
               </div>
@@ -94,7 +94,7 @@ export default function AnalitikKasPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
               {/* Donut komposisi saldo */}
-              <div className="bg-white rounded-2xl shadow-sm border p-6">
+              <div className="bg-white rounded-2xl shadow-soft border p-6">
                 <h2 className="font-semibold text-lg mb-2">Komposisi Saldo Antar-Kas</h2>
                 {donutData.length === 0 ? <p className="text-gray-400 text-sm py-16 text-center">Belum ada saldo</p> : (
                   <ResponsiveContainer width="100%" height={260}>
@@ -110,7 +110,7 @@ export default function AnalitikKasPage() {
               </div>
 
               {/* Bar masuk vs keluar */}
-              <div className="bg-white rounded-2xl shadow-sm border p-6">
+              <div className="bg-white rounded-2xl shadow-soft border p-6">
                 <h2 className="font-semibold text-lg mb-2">Kas Masuk vs Keluar / Bulan</h2>
                 {perBulan.length === 0 ? <p className="text-gray-400 text-sm py-16 text-center">Belum ada mutasi</p> : (
                   <ResponsiveContainer width="100%" height={260}>
@@ -129,7 +129,7 @@ export default function AnalitikKasPage() {
             </div>
 
             {/* Tren arus bersih */}
-            <div className="bg-white rounded-2xl shadow-sm border p-6 mb-5">
+            <div className="bg-white rounded-2xl shadow-soft border p-6 mb-5">
               <h2 className="font-semibold text-lg mb-2">Tren Arus Kas Bersih</h2>
               {perBulan.length === 0 ? <p className="text-gray-400 text-sm py-12 text-center">Belum ada mutasi</p> : (
                 <ResponsiveContainer width="100%" height={240}>
@@ -145,10 +145,10 @@ export default function AnalitikKasPage() {
             </div>
 
             {/* Tabel mutasi per kas per bulan */}
-            <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
               <div className="px-5 py-3 border-b bg-gray-50"><h2 className="font-semibold text-gray-700">Mutasi per Pos Kas</h2></div>
               <table className="w-full text-sm">
-                <thead className="bg-white border-b"><tr>{['Kas', 'Bulan', 'Masuk', 'Keluar', 'Bersih'].map(h => <th key={h} className="text-left px-5 py-2.5 font-semibold text-gray-500 text-xs">{h}</th>)}</tr></thead>
+                <thead className="bg-gray-50 border-b"><tr>{['Kas', 'Bulan', 'Masuk', 'Keluar', 'Bersih'].map(h => <th key={h} className="text-left px-5 py-2.5 font-semibold text-gray-500 text-xs">{h}</th>)}</tr></thead>
                 <tbody className="divide-y divide-gray-100">
                   {filtered.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-gray-400">Belum ada mutasi kas</td></tr> :
                     [...filtered].sort((a, b) => String(b.bulan).localeCompare(String(a.bulan))).map((r, i) => {

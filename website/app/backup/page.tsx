@@ -77,13 +77,13 @@ export default function BackupPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Backup &amp; Recovery</h1>
             <p className="text-gray-500 mt-1 mb-4">Pencadangan dan pemulihan data Excel otomatis.</p>
-            <button onClick={triggerBackup} disabled={busy} className="bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">
+            <button onClick={triggerBackup} disabled={busy} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">
               {busy ? 'Memproses…' : '🔄 Picu pencadangan sekarang'}
             </button>
           </div>
           
           {dbSize && (
-            <div className="bg-white border rounded-2xl p-4 w-72 shadow-sm">
+            <div className="bg-white border rounded-2xl p-4 w-72 shadow-soft">
               <div className="flex justify-between items-end mb-2">
                 <span className="text-sm font-semibold text-gray-700">Kapasitas Database</span>
                 <span className="text-xs text-gray-500">{dbSize.usedMb.toFixed(1)} / {dbSize.limitMb} MB</span>
@@ -101,10 +101,10 @@ export default function BackupPage() {
 
         {msg && <div className="mb-4 text-sm bg-white border rounded-xl px-4 py-2.5">{msg}</div>}
 
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden mb-6">
+        <div className="bg-white rounded-2xl shadow-soft border overflow-hidden mb-6">
           <div className="px-5 py-3 border-b bg-gray-50"><h2 className="font-semibold text-gray-700">Riwayat pencadangan</h2></div>
           <table className="w-full text-sm">
-            <thead className="bg-white border-b"><tr>{['Tanggal', 'Tipe', 'Ukuran', 'Status', 'Pelaksana'].map(h => <th key={h} className="text-left px-5 py-2.5 font-semibold text-gray-500 text-xs">{h}</th>)}</tr></thead>
+            <thead className="bg-gray-50 border-b"><tr>{['Tanggal', 'Tipe', 'Ukuran', 'Status', 'Pelaksana'].map(h => <th key={h} className="text-left px-5 py-2.5 font-semibold text-gray-500 text-xs">{h}</th>)}</tr></thead>
             <tbody className="divide-y divide-gray-100">
               {logs.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-gray-400">Belum ada pencadangan</td></tr> :
                 logs.map(l => (

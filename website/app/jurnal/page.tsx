@@ -60,10 +60,10 @@ export default function JurnalPage() {
             <h1 className="text-3xl font-bold text-gray-900">Jurnal Umum</h1>
             <p className="text-gray-500 mt-1">Pencatatan transaksi &amp; penyesuaian manual (double-entry)</p>
           </div>
-          <button onClick={() => setShow(true)} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Jurnal Baru</button>
+          <button onClick={() => setShow(true)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Jurnal Baru</button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>{['Tanggal', 'Keterangan', 'Akun (Debit / Kredit)', 'Sumber', 'Nilai'].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
@@ -118,7 +118,7 @@ export default function JurnalPage() {
               </div>
               <div className="flex gap-2 mt-5">
                 <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={save} disabled={!balanced || saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-50">{saving ? 'Menyimpan…' : 'Simpan jurnal'}</button>
+                <button onClick={save} disabled={!balanced || saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-50">{saving ? 'Menyimpan…' : 'Simpan jurnal'}</button>
               </div>
             </div>
           </div>

@@ -143,7 +143,7 @@ export default function PengeluaranPage() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={handleExport} className="border border-gray-300 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">⬇ Export Excel</button>
-            <button onClick={() => { setForm({ ...emptyForm }); setFile(null); setMsg(''); setShow(true) }} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-2 text-sm font-semibold">+ Tambah Pengeluaran</button>
+            <button onClick={() => { setForm({ ...emptyForm }); setFile(null); setMsg(''); setShow(true) }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-sm font-semibold">+ Tambah Pengeluaran</button>
           </div>
         </div>
 
@@ -238,7 +238,7 @@ export default function PengeluaranPage() {
               {msg && <p className="text-xs mt-3 text-amber-700 bg-amber-50 rounded-lg px-3 py-2">{msg}</p>}
               <div className="flex gap-2 mt-5">
                 <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={submit} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan (status: pending)'}</button>
+                <button onClick={submit} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan (status: pending)'}</button>
               </div>
               <p className="text-[11px] text-gray-400 mt-2">Pengeluaran masuk sebagai <b>pending</b> → perlu disetujui agar memengaruhi saldo kas & jurnal.</p>
             </div>

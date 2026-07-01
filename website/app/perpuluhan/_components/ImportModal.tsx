@@ -221,7 +221,7 @@ export default function ImportModal({
             <div className="flex gap-2 mt-5">
               <button onClick={() => setStep('pilih')} className="border rounded-xl px-4 py-2 text-sm font-medium">← Pilih file lain</button>
               <button onClick={onClose} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-              <button onClick={doImport} disabled={saving || matchedCount === 0} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-50">
+              <button onClick={doImport} disabled={saving || matchedCount === 0} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-50">
                 {saving ? 'Mengimpor…' : `Impor ${matchedCount} data`}
               </button>
             </div>

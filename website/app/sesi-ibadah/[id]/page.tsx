@@ -49,7 +49,7 @@ export default function SesiDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Denominasi */}
-          <div className="bg-white rounded-2xl shadow-sm border p-5">
+          <div className="bg-white rounded-2xl shadow-soft border p-5">
             <h3 className="font-semibold text-gray-700 mb-3">Kalkulator Denominasi (Fisik)</h3>
             <table className="w-full text-sm">
               <tbody className="divide-y divide-gray-100">
@@ -63,7 +63,7 @@ export default function SesiDetailPage() {
           </div>
 
           {/* Kategori */}
-          <div className="bg-white rounded-2xl shadow-sm border p-5">
+          <div className="bg-white rounded-2xl shadow-soft border p-5">
             <h3 className="font-semibold text-gray-700 mb-3">Kategori Persembahan</h3>
             <table className="w-full text-sm">
               <tbody className="divide-y divide-gray-100">
@@ -78,7 +78,7 @@ export default function SesiDetailPage() {
         </div>
 
         {/* Kartu Biru — pengeluaran tunai dalam sesi + rekonsiliasi */}
-        <div className="bg-white rounded-2xl shadow-sm border p-5 mt-5">
+        <div className="bg-white rounded-2xl shadow-soft border p-5 mt-5">
           <h3 className="font-semibold text-gray-700 mb-3">Kartu Biru — Pengeluaran Tunai</h3>
           <table className="w-full text-sm">
             <tbody className="divide-y divide-gray-100">
@@ -99,7 +99,7 @@ export default function SesiDetailPage() {
         </div>
 
         {/* Tanda tangan */}
-        <div className="bg-white rounded-2xl shadow-sm border p-5 mt-5">
+        <div className="bg-white rounded-2xl shadow-soft border p-5 mt-5">
           <h3 className="font-semibold text-gray-700 mb-3">Otorisasi &amp; Tanda Tangan</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             <SignBox label="Penghitung 1" nama={sesi.nama_penghitung1} url={sesi.ttd_penghitung1_url} />

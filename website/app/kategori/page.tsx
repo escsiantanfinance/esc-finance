@@ -104,10 +104,10 @@ export default function KategoriPersembahanPage() {
           <h1 className="text-3xl font-bold text-gray-900">Kategori Persembahan</h1>
           <p className="text-gray-500 mt-1">Jenis persembahan yang muncul di aplikasi bendahara — tiap kategori menuju satu kas</p>
         </div>
-        <button onClick={openAdd} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Kategori</button>
+        <button onClick={openAdd} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Kategori</button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>{['#', 'Nama', 'Kas tujuan', 'Daftar nama', 'Perpuluhan', 'Status', ''].map(h => <th key={h} className="text-left px-5 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
@@ -168,7 +168,7 @@ export default function KategoriPersembahanPage() {
             <div className="flex gap-2 mt-5">
               {edit && <button onClick={del} disabled={saving} className="border border-red-300 text-red-600 rounded-xl px-4 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-60">🗑 Hapus</button>}
               <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-              <button onClick={save} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
+              <button onClick={save} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
             </div>
           </div>
         </div>

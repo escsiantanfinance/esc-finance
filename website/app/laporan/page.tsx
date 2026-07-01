@@ -159,7 +159,7 @@ export default function LaporanPage() {
 
         <div className="flex gap-2 mb-5">
           {([['aktivitas', '📈 Laporan Aktivitas'], ['neraca', '⚖️ Neraca'], ['aruskas', '💧 Arus Kas']] as [Tab, string][]).map(([k, l]) => (
-            <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 rounded-xl text-sm font-semibold ${tab === k ? 'bg-blue-700 text-white' : 'bg-white border text-gray-600'}`}>{l}</button>
+            <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 rounded-xl text-sm font-semibold ${tab === k ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>{l}</button>
           ))}
         </div>
 
@@ -191,7 +191,7 @@ export default function LaporanPage() {
 
         {/* AKTIVITAS */}
         {tab === 'aktivitas' && (
-          <div className="bg-white rounded-2xl shadow-sm border p-6 max-w-3xl">
+          <div className="bg-white rounded-2xl shadow-soft border p-6 max-w-3xl">
             <h2 className="font-semibold text-lg mb-4">Laporan Aktivitas — {fmtTgl(dateFrom)} s/d {fmtTgl(dateTo)}</h2>
             {loading ? <p className="text-sm text-gray-400 py-4">Memuat...</p> : <>
               <Section title="Pendapatan" rows={pendapatan} color="text-green-700" />
@@ -210,12 +210,12 @@ export default function LaporanPage() {
         {tab === 'neraca' && (
           <div className="max-w-4xl">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <div className="bg-white rounded-2xl shadow-sm border p-6">
+              <div className="bg-white rounded-2xl shadow-soft border p-6">
                 <h2 className="font-semibold text-lg mb-4">Aset</h2>
                 {aset.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
                 <Row label="Total Aset" value={totalAset} bold color="text-blue-700" />
               </div>
-              <div className="bg-white rounded-2xl shadow-sm border p-6">
+              <div className="bg-white rounded-2xl shadow-soft border p-6">
                 <h2 className="font-semibold text-lg mb-4">Kewajiban &amp; Ekuitas</h2>
                 {kewajiban.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
                 {ekuitas.map(r => <Row key={r.akun_id} label={`${r.kode_akun} ${r.nama_akun}`} value={Number(r.saldo)} />)}
@@ -232,7 +232,7 @@ export default function LaporanPage() {
         {/* ARUS KAS */}
         {tab === 'aruskas' && (
           <div className="max-w-4xl">
-            <div className="bg-white rounded-2xl shadow-sm border overflow-hidden mb-4">
+            <div className="bg-white rounded-2xl shadow-soft border overflow-hidden mb-4">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b"><tr>{['Kas', 'Kas Masuk', 'Kas Keluar', 'Arus Bersih'].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr></thead>
                 <tbody className="divide-y divide-gray-100">

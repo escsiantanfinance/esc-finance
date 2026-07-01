@@ -173,7 +173,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Kelola Pengguna</h1>
           <p className="text-gray-500 mt-1">Akun tim, role, izin approve, &amp; akses kas</p>
         </div>
-        <button onClick={() => { setForm({ ...emptyForm }); setMsg(''); setShow(true) }} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Akun</button>
+        <button onClick={() => { setForm({ ...emptyForm }); setMsg(''); setShow(true) }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Akun</button>
       </div>
 
       {msg && <div className="mb-4 text-sm bg-white border rounded-xl px-4 py-2.5">{msg}</div>}
@@ -268,7 +268,7 @@ export default function UsersPage() {
             {msg && <p className="text-xs mt-3 text-red-600">{msg.startsWith('✗') ? msg : ''}</p>}
             <div className="flex gap-2 mt-5">
               <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-              <button onClick={addUser} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Membuat…' : 'Buat akun'}</button>
+              <button onClick={addUser} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Membuat…' : 'Buat akun'}</button>
             </div>
           </div>
         </div>
@@ -306,7 +306,7 @@ export default function UsersPage() {
               {allKas.length === 0 && <p className="text-gray-400 text-sm">Belum ada kas aktif.</p>}
             </div>
             {kasMsg && <p className={`text-xs mt-2 font-medium ${kasMsg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>{kasMsg}</p>}
-            <button onClick={saveKasAccess} disabled={kasSaving} className="w-full mt-5 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{kasSaving ? 'Menyimpan…' : 'Selesai & Simpan'}</button>
+            <button onClick={saveKasAccess} disabled={kasSaving} className="w-full mt-5 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{kasSaving ? 'Menyimpan…' : 'Selesai & Simpan'}</button>
           </div>
         </div>
       )}
@@ -328,7 +328,7 @@ export default function UsersPage() {
                 )
               })}
             </div>
-            <button onClick={() => setPageAccessUser(null)} className="w-full mt-5 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold">Selesai</button>
+            <button onClick={() => setPageAccessUser(null)} className="w-full mt-5 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold">Selesai</button>
           </div>
         </div>
       )}

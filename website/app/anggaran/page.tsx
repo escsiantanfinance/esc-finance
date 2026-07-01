@@ -124,13 +124,13 @@ export default function AnggaranPage() {
             <select value={tahun} onChange={e => setTahun(Number(e.target.value))} className="border rounded-xl px-3 py-1.5 text-sm">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            <button onClick={() => { setForm({ ...emptyForm }); setEditId(null); setMsg(''); setShow(true) }} className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl px-4 py-1.5 text-sm font-semibold">+ Tambah</button>
+            <button onClick={() => { setForm({ ...emptyForm }); setEditId(null); setMsg(''); setShow(true) }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-1.5 text-sm font-semibold">+ Tambah</button>
           </div>
         </div>
 
         {/* Ringkasan total */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-700 text-white rounded-2xl p-5">
+          <div className="bg-blue-600 text-white rounded-2xl p-5">
             <p className="text-blue-200 text-sm">Total Dianggarkan {tahun}</p>
             <p className="text-2xl font-bold">{formatRupiah(totalAnggaran)}</p>
           </div>
@@ -154,7 +154,7 @@ export default function AnggaranPage() {
             const subAng = items.reduce((s, r) => s + Number(r.jumlah_dianggarkan), 0)
             const subReal = items.reduce((s, r) => s + Number(r.realisasi), 0)
             return (
-              <div key={kategori} className="bg-white rounded-2xl shadow-sm border mb-4 overflow-hidden">
+              <div key={kategori} className="bg-white rounded-2xl shadow-soft border mb-4 overflow-hidden">
                 <div className="bg-gray-50 px-5 py-3 border-b flex items-center justify-between">
                   <h3 className="font-semibold text-gray-700">{kategori}</h3>
                   <p className="text-xs text-gray-500">{formatRupiah(subReal)} / {formatRupiah(subAng)}</p>
@@ -240,7 +240,7 @@ export default function AnggaranPage() {
               {msg && <p className="text-xs mt-3 text-red-600">{msg}</p>}
               <div className="flex gap-2 mt-5">
                 <button onClick={() => { setShow(false); setEditId(null) }} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={saveAnggaran} disabled={saving} className="flex-1 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : (editId ? 'Simpan perubahan' : 'Simpan')}</button>
+                <button onClick={saveAnggaran} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : (editId ? 'Simpan perubahan' : 'Simpan')}</button>
               </div>
             </div>
           </div>
