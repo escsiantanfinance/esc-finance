@@ -106,7 +106,7 @@ export default function UsersPage() {
   }
 
   function togglePage(u: any, path: string) {
-    const current = new Set(u.allowed_pages ?? [])
+    const current = new Set<string>(u.allowed_pages ?? [])
     if (current.has(path)) current.delete(path)
     else current.add(path)
     patchUser(u.id, { allowed_pages: Array.from(current) })
