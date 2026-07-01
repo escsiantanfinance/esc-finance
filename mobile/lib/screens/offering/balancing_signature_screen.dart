@@ -4,8 +4,7 @@ import 'package:signature/signature.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/sesi_draft_provider.dart';
-import '../../utils/currency_formatter.dart';
-import '../widgets/stepper_header.dart';
+import 'stepper_header.dart';
 
 class BalancingSignatureScreen extends StatefulWidget {
   const BalancingSignatureScreen({super.key});

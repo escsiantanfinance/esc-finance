@@ -49,8 +49,6 @@ class FinanceProvider extends ChangeNotifier {
         summary = DashboardSummary(
           pemasukanBulanIni: pMasuk,
           pengeluaranBulanIni: pKeluar,
-          pemasukanTahunIni: summaryGlobal.pemasukanTahunIni,
-          pengeluaranTahunIni: summaryGlobal.pengeluaranTahunIni,
           pengeluaranPending: summaryGlobal.pengeluaranPending,
           totalSaldo: saldo,
         );
