@@ -23,7 +23,7 @@ class _PengeluaranScreenState extends State<PengeluaranScreen> {
   }
 
   Color _statusColor(String s) =>
-      s == 'disetujui' ? AppColors.success : (s == 'ditolak' ? AppColors.danger : AppColors.gold);
+      s == 'disetujui' ? AppColors.success : (s == 'ditolak' ? AppColors.danger : AppColors.warning);
 
   @override
   Widget build(BuildContext context) {
