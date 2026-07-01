@@ -20,7 +20,7 @@ export default function PersembahanPage() {
     const end = bulan === 12 ? `${tahun + 1}-01-01` : `${tahun}-${String(bulan + 1).padStart(2, '0')}-01`
     const { data: rows, error } = await supabase
       .from('persembahan')
-      .select('*, kas:kas_id(nama), anggota:anggota_id(nama), kategori:kategori_id(nama), pencatat:dicatat_oleh(full_name), sesi:sesi_id(dibuat_oleh(full_name))')
+      .select('*, kas:kas_id(nama), anggota:anggota_id(nama), kategori:kategori_id(nama), pencatat:dicatat_oleh(full_name), sesi:sesi_id(dibuka_oleh(full_name))')
       .gte('tanggal', start)
       .lt('tanggal', end)
       .order('tanggal', { ascending: false })
@@ -39,7 +39,7 @@ export default function PersembahanPage() {
         Kategori: r.kategori?.nama ?? '-',
         Jumlah: r.jumlah,
         Pemberi: r.nama_pemberi ?? 'Anonim',
-        'Diinput oleh': (r as any).sesi?.dibuat_oleh?.full_name ?? (r as any).pencatat?.full_name ?? '-',
+        'Diinput oleh': (r as any).sesi?.dibuka_oleh?.full_name ?? (r as any).pencatat?.full_name ?? '-',
         Kas: r.kas?.nama ?? '-',
         Metode: r.metode_pembayaran,
         Terverifikasi: r.is_verified ? 'Ya' : 'Belum',
@@ -97,7 +97,7 @@ export default function PersembahanPage() {
                   <td className="px-4 py-3">{row.kategori?.nama ?? '-'}</td>
                   <td className="px-4 py-3 font-semibold text-green-700">{formatRupiah(row.jumlah)}</td>
                   <td className="px-4 py-3 text-gray-500">{row.nama_pemberi ?? 'Anonim'}</td>
-                  <td className="px-4 py-3 text-gray-600">{(row as any).sesi?.dibuat_oleh?.full_name ?? (row as any).pencatat?.full_name ?? '—'}</td>
+                  <td className="px-4 py-3 text-gray-600">{(row as any).sesi?.dibuka_oleh?.full_name ?? (row as any).pencatat?.full_name ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500">{row.kas?.nama ?? '-'}</td>
                   <td className="px-4 py-3 capitalize">{row.metode_pembayaran}</td>
                   <td className="px-4 py-3">
