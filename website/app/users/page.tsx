@@ -131,7 +131,9 @@ export default function UsersPage() {
     const current = new Set<string>(u.allowed_pages ?? [])
     if (current.has(path)) current.delete(path)
     else current.add(path)
-    patchUser(u.id, { allowed_pages: Array.from(current) })
+    const newPages = Array.from(current)
+    setSettingsUser({ ...u, allowed_pages: newPages })
+    patchUser(u.id, { allowed_pages: newPages })
   }
 
   async function changePassword() {
