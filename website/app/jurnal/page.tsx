@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, formatTanggal, type Akun } from '@/lib/supabase'
 

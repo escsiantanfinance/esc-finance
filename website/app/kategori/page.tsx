@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase, type KategoriPersembahan, type Kas, type Akun } from '@/lib/supabase'
 import { RowAction } from '@/components/RowAction'

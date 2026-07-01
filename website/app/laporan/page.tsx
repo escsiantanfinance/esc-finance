@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah } from '@/lib/supabase'
 import { exportSheets } from '@/lib/export-excel'
