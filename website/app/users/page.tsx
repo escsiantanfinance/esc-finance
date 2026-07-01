@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase, formatTanggal } from '@/lib/supabase'
+import { Settings, KeyRound, Trash2 } from 'lucide-react'
 import { RowAction } from '@/components/RowAction'
 
 const ROLE_BADGE: Record<string, string> = {
@@ -42,7 +43,7 @@ export default function UsersPage() {
   const [userKasIds, setUserKasIds] = useState<Set<string>>(new Set())
   const [kasSaving, setKasSaving] = useState(false)
   const [kasMsg, setKasMsg] = useState('')
-  const [pageAccessUser, setPageAccessUser] = useState<any | null>(null)
+  const [settingsUser, setSettingsUser] = useState<any | null>(null)
   
   // Ganti Password state
   const [resetPwdUser, setResetPwdUser] = useState<any | null>(null)
@@ -93,8 +94,8 @@ export default function UsersPage() {
     setMsg('✓ Akun dihapus'); load()
   }
 
-  async function openAccess(u: any) {
-    setAccessUser(u)
+  async function openSettings(u: any) {
+    setSettingsUser(u)
     setKasSaving(false)
     setKasMsg('')
     const { data } = await supabase.from('kas_akses').select('kas_id').eq('user_id', u.id)
@@ -112,22 +113,18 @@ export default function UsersPage() {
   }
 
   async function saveKasAccess() {
-    if (!accessUser) return
+    if (!settingsUser) return
     setKasSaving(true); setKasMsg('')
     const res = await fetch('/api/users', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: accessUser.id, kasIds: Array.from(userKasIds) }),
+      body: JSON.stringify({ userId: settingsUser.id, kasIds: Array.from(userKasIds) }),
     })
     const j = await res.json()
     setKasSaving(false)
     if (!res.ok) { setKasMsg('✗ ' + j.error); return }
     setKasMsg('✓ Tersimpan!')
-    setTimeout(() => { setAccessUser(null); setKasMsg('') }, 800)
-  }
-
-  function openPageAccess(u: any) {
-    setPageAccessUser(u)
+    setTimeout(() => { setSettingsUser(null); setKasMsg('') }, 800)
   }
 
   function togglePage(u: any, path: string) {
@@ -220,10 +217,9 @@ export default function UsersPage() {
                     <td className="px-5 py-3">
                       {isProtected ? <span className="text-xs text-gray-400">semua akses</span> :
                         isSuper ? (
-                          <div className="flex gap-1.5 flex-col items-start">
-                            <RowAction onClick={() => openAccess(u)}>Atur Kas…</RowAction>
-                            <RowAction onClick={() => openPageAccess(u)}>Atur Halaman…</RowAction>
-                          </div>
+                          <button onClick={() => openSettings(u)} title="Pengaturan Akses" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
+                            <Settings className="w-4 h-4" />
+                          </button>
                         ) : <span className="text-xs text-gray-300">—</span>}
                     </td>
                     <td className="px-5 py-3 text-gray-500">{u.last_sign_in_at ? formatTanggal(u.last_sign_in_at) : 'belum pernah'}</td>
@@ -231,9 +227,15 @@ export default function UsersPage() {
                       {isProtected ? (
                         <span className="text-xs text-gray-300">terlindungi</span>
                       ) : (
-                        <div className="flex items-center gap-2">
-                          {isSuper && <RowAction onClick={() => setResetPwdUser(u)}>Ganti Sandi</RowAction>}
-                          <RowAction variant="danger" onClick={() => delUser(u.id, u.email)}>Hapus</RowAction>
+                        <div className="flex items-center gap-1">
+                          {isSuper && (
+                            <button onClick={() => setResetPwdUser(u)} title="Ganti Sandi" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
+                              <KeyRound className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button onClick={() => delUser(u.id, u.email)} title="Hapus" className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       )}
                     </td>
@@ -289,46 +291,48 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Modal akses kas */}
-      {accessUser && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setAccessUser(null)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-soft" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg mb-1">Akses Kas — {accessUser.full_name ?? accessUser.email}</h3>
-            <p className="text-xs text-gray-500 mb-4">Centang kas yang boleh diakses bendahara ini di aplikasi mobile.</p>
-            <div className="space-y-1.5 max-h-72 overflow-y-auto">
-              {allKas.map(k => (
-                <label key={k.id} className="flex items-center gap-2.5 text-sm px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer">
-                  <input type="checkbox" checked={userKasIds.has(k.id)} onChange={() => toggleKas(k.id)} />
-                  <span className="font-medium">{k.nama}</span>
-                  {k.penanggung_jawab && <span className="text-xs text-gray-400">· {k.penanggung_jawab}</span>}
-                </label>
-              ))}
-              {allKas.length === 0 && <p className="text-gray-400 text-sm">Belum ada kas aktif.</p>}
-            </div>
-            {kasMsg && <p className={`text-xs mt-2 font-medium ${kasMsg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>{kasMsg}</p>}
-            <button onClick={saveKasAccess} disabled={kasSaving} className="w-full mt-5 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{kasSaving ? 'Menyimpan…' : 'Selesai & Simpan'}</button>
-          </div>
-        </div>
-      )}
+      {/* Modal akses kas dan halaman */}
+      {settingsUser && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setSettingsUser(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-soft max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-1">Pengaturan Akses — {settingsUser.full_name ?? settingsUser.email}</h3>
+            <p className="text-xs text-gray-500 mb-4">Centang izin yang ingin Anda berikan kepada pengguna ini.</p>
+            
+            <div className="overflow-y-auto space-y-6 flex-1 pr-2">
+              <div>
+                <h4 className="font-semibold text-sm mb-2 text-gray-700 border-b pb-1">Akses Kas Mobile (Bendahara)</h4>
+                <div className="space-y-1.5">
+                  {allKas.map(k => (
+                    <label key={k.id} className="flex items-center gap-2.5 text-sm px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer">
+                      <input type="checkbox" checked={userKasIds.has(k.id)} onChange={() => toggleKas(k.id)} />
+                      <span className="font-medium">{k.nama}</span>
+                      {k.penanggung_jawab && <span className="text-xs text-gray-400">· {k.penanggung_jawab}</span>}
+                    </label>
+                  ))}
+                  {allKas.length === 0 && <p className="text-gray-400 text-sm">Belum ada kas aktif.</p>}
+                </div>
+              </div>
 
-      {/* Modal akses halaman */}
-      {pageAccessUser && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setPageAccessUser(null)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg mb-1">Akses Halaman — {pageAccessUser.full_name ?? pageAccessUser.email}</h3>
-            <p className="text-xs text-gray-500 mb-4">Pilih halaman mana yang bisa dilihat di menu sidebar (centang). Jika Anda mengosongkan semua, sistem akan kembali menggunakan aturan default berdasarkan role.</p>
-            <div className="space-y-1.5 max-h-72 overflow-y-auto">
-              {ALL_PAGES.map(p => {
-                const checked = (pageAccessUser.allowed_pages ?? []).includes(p.path)
-                return (
-                  <label key={p.path} className="flex items-center gap-2.5 text-sm px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer">
-                    <input type="checkbox" checked={checked} onChange={() => togglePage(pageAccessUser, p.path)} />
-                    <span className="font-medium">{p.label} <span className="text-xs text-gray-400 font-normal">({p.path})</span></span>
-                  </label>
-                )
-              })}
+              <div>
+                <h4 className="font-semibold text-sm mb-2 text-gray-700 border-b pb-1">Akses Halaman Sidebar Web</h4>
+                <div className="space-y-1.5">
+                  {ALL_PAGES.map(p => {
+                    const checked = (settingsUser.allowed_pages ?? []).includes(p.path)
+                    return (
+                      <label key={p.path} className="flex items-center gap-2.5 text-sm px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer">
+                        <input type="checkbox" checked={checked} onChange={() => togglePage(settingsUser, p.path)} />
+                        <span className="font-medium">{p.label} <span className="text-xs text-gray-400 font-normal">({p.path})</span></span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
-            <button onClick={() => setPageAccessUser(null)} className="w-full mt-5 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold">Selesai</button>
+
+            <div className="pt-4 border-t mt-4 shrink-0">
+              {kasMsg && <p className={`text-xs mb-3 font-medium ${kasMsg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>{kasMsg}</p>}
+              <button onClick={saveKasAccess} disabled={kasSaving} className="w-full bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{kasSaving ? 'Menyimpan…' : 'Selesai & Simpan'}</button>
+            </div>
           </div>
         </div>
       )}
