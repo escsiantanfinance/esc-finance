@@ -40,6 +40,8 @@ export default function UsersPage() {
   const [accessUser, setAccessUser] = useState<any | null>(null)
   const [allKas, setAllKas] = useState<any[]>([])
   const [userKasIds, setUserKasIds] = useState<Set<string>>(new Set())
+  const [kasSaving, setKasSaving] = useState(false)
+  const [kasMsg, setKasMsg] = useState('')
   const [pageAccessUser, setPageAccessUser] = useState<any | null>(null)
 
   async function load() {
@@ -89,17 +91,35 @@ export default function UsersPage() {
 
   async function openAccess(u: any) {
     setAccessUser(u)
+    setKasSaving(false)
+    setKasMsg('')
     const { data } = await supabase.from('kas_akses').select('kas_id').eq('user_id', u.id)
     setUserKasIds(new Set((data ?? []).map((r: any) => r.kas_id)))
   }
 
-  async function toggleKas(kasId: string) {
+  function toggleKas(kasId: string) {
+    // Hanya ubah state lokal — disimpan ke DB saat tombol Selesai ditekan
+    setUserKasIds(prev => {
+      const next = new Set(prev)
+      if (next.has(kasId)) next.delete(kasId)
+      else next.add(kasId)
+      return next
+    })
+  }
+
+  async function saveKasAccess() {
     if (!accessUser) return
-    const has = userKasIds.has(kasId)
-    const next = new Set(userKasIds)
-    if (has) { next.delete(kasId); await supabase.from('kas_akses').delete().eq('kas_id', kasId).eq('user_id', accessUser.id) }
-    else { next.add(kasId); await supabase.from('kas_akses').insert({ kas_id: kasId, user_id: accessUser.id }) }
-    setUserKasIds(next)
+    setKasSaving(true); setKasMsg('')
+    const res = await fetch('/api/users', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: accessUser.id, kasIds: Array.from(userKasIds) }),
+    })
+    const j = await res.json()
+    setKasSaving(false)
+    if (!res.ok) { setKasMsg('✗ ' + j.error); return }
+    setKasMsg('✓ Tersimpan!')
+    setTimeout(() => { setAccessUser(null); setKasMsg('') }, 800)
   }
 
   function openPageAccess(u: any) {
@@ -229,7 +249,8 @@ export default function UsersPage() {
               ))}
               {allKas.length === 0 && <p className="text-gray-400 text-sm">Belum ada kas aktif.</p>}
             </div>
-            <button onClick={() => setAccessUser(null)} className="w-full mt-5 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold">Selesai</button>
+            {kasMsg && <p className={`text-xs mt-2 font-medium ${kasMsg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>{kasMsg}</p>}
+            <button onClick={saveKasAccess} disabled={kasSaving} className="w-full mt-5 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{kasSaving ? 'Menyimpan…' : 'Selesai & Simpan'}</button>
           </div>
         </div>
       )}

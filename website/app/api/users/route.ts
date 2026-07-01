@@ -78,6 +78,27 @@ export async function PATCH(req: Request) {
   return NextResponse.json({ ok: true })
 }
 
+// PUT: Simpan set akses kas untuk satu user (replace-all)
+export async function PUT(req: Request) {
+  const auth = await requireAdmin()
+  if (!('ok' in auth)) return NextResponse.json({ error: auth.error }, { status: auth.status })
+  const { userId, kasIds } = await req.json().catch(() => ({}))
+  if (!userId || !Array.isArray(kasIds))
+    return NextResponse.json({ error: 'userId dan kasIds (array) wajib ada' }, { status: 400 })
+
+  const admin = createSupabaseAdmin()
+  // Hapus semua akses lama, lalu insert yang baru (atomic)
+  const { error: delErr } = await admin.from('kas_akses').delete().eq('user_id', userId)
+  if (delErr) return NextResponse.json({ error: 'Gagal hapus akses lama: ' + delErr.message }, { status: 500 })
+
+  if (kasIds.length > 0) {
+    const rows = kasIds.map((kasId: string) => ({ user_id: userId, kas_id: kasId }))
+    const { error: insErr } = await admin.from('kas_akses').insert(rows)
+    if (insErr) return NextResponse.json({ error: 'Gagal simpan akses baru: ' + insErr.message }, { status: 500 })
+  }
+  return NextResponse.json({ ok: true })
+}
+
 export async function DELETE(req: Request) {
   const auth = await requireAdmin()
   if (!('ok' in auth)) return NextResponse.json({ error: auth.error }, { status: auth.status })
