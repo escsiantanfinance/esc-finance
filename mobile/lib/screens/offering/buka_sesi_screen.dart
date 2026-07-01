@@ -4,11 +4,6 @@ import '../../providers/finance_provider.dart';
 import '../../providers/sesi_draft_provider.dart';
 import 'input_kategori_screen.dart';
 
-const _jenisOptions = [
-  'Ibadah Raya 1', 'Ibadah Raya 2', 'Ibadah Raya 3',
-  'Ibadah Pemuda', 'Sekolah Minggu', 'Ibadah Doa',
-];
-
 class BukaSesiScreen extends StatefulWidget {
   const BukaSesiScreen({super.key});
   @override
@@ -17,7 +12,6 @@ class BukaSesiScreen extends StatefulWidget {
 
 class _BukaSesiScreenState extends State<BukaSesiScreen> {
   final _namaSesiCtrl = TextEditingController();
-  String _jenis = _jenisOptions.first;
   DateTime _tanggal = DateTime.now();
   TimeOfDay? _jam;
   bool _loading = false;
@@ -40,14 +34,6 @@ class _BukaSesiScreenState extends State<BukaSesiScreen> {
           TextFormField(
             controller: _namaSesiCtrl,
             decoration: const InputDecoration(hintText: 'mis. Persembahan Pagi'),
-          ),
-          const SizedBox(height: 16),
-          const Text('Jenis ibadah', style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            initialValue: _jenis,
-            items: _jenisOptions.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-            onChanged: (v) => setState(() => _jenis = v!),
           ),
           const SizedBox(height: 16),
           Row(
@@ -103,9 +89,9 @@ class _BukaSesiScreenState extends State<BukaSesiScreen> {
     final jamStr = _jam == null ? null : '${_jam!.hour.toString().padLeft(2, '0')}:${_jam!.minute.toString().padLeft(2, '0')}';
     try {
       final id = await draft.repo.createSesi(
-        namaSesi: namaSesi, jenisIbadah: _jenis, tanggal: tanggalStr, jam: jamStr,
+        namaSesi: namaSesi, jenisIbadah: namaSesi, tanggal: tanggalStr, jam: jamStr,
       );
-      draft.startNew(sesiId: id, namaSesi: namaSesi, jenisIbadah: _jenis, tanggal: tanggalStr, jam: jamStr);
+      draft.startNew(sesiId: id, namaSesi: namaSesi, jenisIbadah: namaSesi, tanggal: tanggalStr, jam: jamStr);
       if (!mounted) return;
       await context.read<FinanceProvider>().ensureKasKategori();
       if (!mounted) return;

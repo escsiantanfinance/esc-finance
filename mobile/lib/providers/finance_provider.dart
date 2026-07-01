@@ -19,6 +19,8 @@ class FinanceProvider extends ChangeNotifier {
     _setBusy(true);
     try {
       summary = await repo.getDashboardSummary();
+      kasAksesIds = await repo.getKasAksesIds();
+      kas = await repo.getKasList();
     } catch (_) {}
     _setBusy(false);
   }

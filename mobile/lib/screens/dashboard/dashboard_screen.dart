@@ -18,6 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FinanceProvider>().loadDashboard();
+      context.read<FinanceProvider>().ensureKasKategori();
     });
   }
 
@@ -26,6 +27,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final auth = context.watch<AuthProvider>();
     final fin = context.watch<FinanceProvider>();
     final s = fin.summary;
+    final fullAccess = auth.profile?.isFullAccess ?? false;
+    final kasList = fin.kasUntuk(fullAccess);
 
     return Scaffold(
       appBar: AppBar(
@@ -47,31 +50,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(auth.profile?.fullName ?? '-',
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            // Saldo
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(16)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Saldo — per-kas untuk bendahara, total untuk admin/super admin
+            if (!fullAccess && kasList.isNotEmpty)
+              ...kasList.map((k) => Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(k.nama,
+                            style: const TextStyle(
+                                color: Color(0xFFBFDBFE), fontSize: 14)),
+                        const SizedBox(height: 4),
+                        Text(formatRupiah(k.saldoSaatIni),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ))
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(16)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Total saldo kas',
+                        style: TextStyle(color: Color(0xFFBFDBFE))),
+                    const SizedBox(height: 4),
+                    Text(formatRupiah(s?.totalSaldo),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 16),
+            if (fullAccess)
+              Row(
                 children: [
-                  const Text('Total saldo kas', style: TextStyle(color: Color(0xFFBFDBFE))),
-                  const SizedBox(height: 4),
-                  Text(formatRupiah(s?.totalSaldo),
-                      style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+                  _MiniStat(
+                      label: 'Masuk bln ini',
+                      value: formatRupiah(s?.pemasukanBulanIni),
+                      color: AppColors.success),
+                  const SizedBox(width: 12),
+                  _MiniStat(
+                      label: 'Keluar bln ini',
+                      value: formatRupiah(s?.pengeluaranBulanIni),
+                      color: AppColors.danger),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _MiniStat(label: 'Masuk bln ini', value: formatRupiah(s?.pemasukanBulanIni), color: AppColors.success),
-                const SizedBox(width: 12),
-                _MiniStat(label: 'Keluar bln ini', value: formatRupiah(s?.pengeluaranBulanIni), color: AppColors.danger),
-              ],
-            ),
             const SizedBox(height: 20),
-            const Text('Aksi cepat', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text('Aksi cepat',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 12),
             GridView.count(
               crossAxisCount: 2,
@@ -82,8 +123,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               childAspectRatio: 1.6,
               children: [
                 _ActionCard(
-                  icon: '💵', label: 'Buka sesi ibadah',
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BukaSesiScreen())),
+                  icon: '💵',
+                  label: 'Buka sesi ibadah',
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const BukaSesiScreen())),
                 ),
                 _ActionCard(icon: '🧾', label: 'Pengeluaran', onTap: () {}),
                 _ActionCard(icon: '📊', label: 'Laporan', onTap: () {}),
@@ -116,7 +159,9 @@ class _MiniStat extends StatelessWidget {
           children: [
             Text(label, style: TextStyle(color: AppColors.muted, fontSize: 12)),
             const SizedBox(height: 4),
-            Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15)),
+            Text(value,
+                style: TextStyle(
+                    color: color, fontWeight: FontWeight.bold, fontSize: 15)),
           ],
         ),
       ),
