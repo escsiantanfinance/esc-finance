@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config.dart';
-import '../core/supabase_service.dart';
+import '../core/supabase_client.dart';
 import '../models/models.dart';
 
 /// Akses data ke Supabase (mirror logika web).
