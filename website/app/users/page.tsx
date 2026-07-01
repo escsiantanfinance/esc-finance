@@ -2,313 +2,314 @@
 export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase, formatTanggal } from '@/lib/supabase'
-import { Settings, KeyRound, Trash2 } from 'lucide-react'
-import { RowAction } from '@/components/RowAction'
+import ScopeBanner from '@/components/ScopeBanner'
+import { Settings, KeyRound, Trash2, Plus, UserPlus } from 'lucide-react'
 
-const ROLE_BADGE: Record<string, string> = {
-  admin: 'bg-violet-100 text-violet-700', bendahara: 'bg-blue-100 text-blue-700',
-  majelis: 'bg-slate-100 text-slate-700', volunteer: 'bg-green-100 text-green-700',
-}
 const EDITABLE_ROLES = ['admin', 'bendahara', 'majelis', 'volunteer']
-const emptyForm = { email: '', password: '', full_name: '', role: 'bendahara' }
+const ROLE_BADGE: Record<string, string> = {
+  admin: 'badge badge-violet',
+  bendahara: 'badge badge-blue',
+  majelis: 'badge badge-green',
+  volunteer: 'badge badge-gray',
+}
 
 const ALL_PAGES = [
   { path: '/dashboard', label: 'Dashboard' },
-  { path: '/sesi-ibadah', label: 'Sesi Ibadah' },
   { path: '/persembahan', label: 'Persembahan' },
-  { path: '/pengeluaran', label: 'Pengeluaran' },
-  { path: '/anggaran', label: 'Anggaran' },
   { path: '/perpuluhan', label: 'Perpuluhan' },
-  { path: '/akun', label: 'Akun & Kas' },
-  { path: '/analitik-kas', label: 'Analitik Kas' },
+  { path: '/pengeluaran', label: 'Pengeluaran' },
   { path: '/jurnal', label: 'Jurnal Umum' },
-  { path: '/laporan', label: 'Laporan' },
-  { path: '/kategori', label: 'Kategori Persembahan' },
-  { path: '/users', label: 'Kelola Pengguna' },
-  { path: '/backup', label: 'Backup' },
+  { path: '/buku-besar', label: 'Buku Besar' },
+  { path: '/laporan', label: 'Laporan & Neraca' },
 ]
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [allowed, setAllowed] = useState<boolean | null>(null)
   const [isSuper, setIsSuper] = useState(false)
-  const [users, setUsers] = useState<any[]>([])
-  const [show, setShow] = useState(false)
+  
+  const emptyForm = { email: '', full_name: '', password: '', role: 'bendahara' }
   const [form, setForm] = useState({ ...emptyForm })
+  const [show, setShow] = useState(false)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
 
-  // Kelola akses kas
-  const [accessUser, setAccessUser] = useState<any | null>(null)
+  const [resetPwdUser, setResetPwdUser] = useState<any>(null)
+  const [newPassword, setNewPassword] = useState('')
+
+  const [settingsUser, setSettingsUser] = useState<any>(null)
   const [allKas, setAllKas] = useState<any[]>([])
   const [userKasIds, setUserKasIds] = useState<Set<string>>(new Set())
   const [kasSaving, setKasSaving] = useState(false)
   const [kasMsg, setKasMsg] = useState('')
-  const [settingsUser, setSettingsUser] = useState<any | null>(null)
-  
-  // Ganti Password state
-  const [resetPwdUser, setResetPwdUser] = useState<any | null>(null)
-  const [newPassword, setNewPassword] = useState('')
-
-  async function load() {
-    const res = await fetch('/api/users')
-    if (res.ok) { const j = await res.json(); setUsers(j.users ?? []) }
-  }
 
   useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setAllowed(false); return }
       const { data: p } = await supabase.from('profiles').select('role, is_super_admin').eq('id', user.id).single()
-      const ok = p?.role === 'admin'
-      setAllowed(ok)
-      setIsSuper(!!p?.is_super_admin)
-      if (ok) {
-        load()
-        const { data: k } = await supabase.from('kas').select('id, nama, penanggung_jawab').eq('is_aktif', true).order('urutan')
-        setAllKas(k ?? [])
-      }
-    }
-    init()
+      const sup = !!p?.is_super_admin
+      setIsSuper(sup)
+      setAllowed(sup || p?.role === 'admin')
+      if (sup || p?.role === 'admin') { load() }
+    })
   }, [])
 
-  async function addUser() {
-    setSaving(true); setMsg('')
-    const res = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-    const j = await res.json()
-    setSaving(false)
-    if (!res.ok) { setMsg('✗ ' + j.error); return }
-    setShow(false); setForm({ ...emptyForm }); setMsg('✓ Akun dibuat'); load()
+  async function load() {
+    const { data } = await supabase.from('profiles').select('*').order('created_at')
+    if (data) setUsers(data)
+    setLoading(false)
+    const { data: k } = await supabase.from('kas').select('id, nama, penanggung_jawab').eq('is_aktif', true).order('urutan')
+    if (k) setAllKas(k)
   }
 
-  async function patchUser(id: string, patch: { role?: string; boleh_approve_pengeluaran?: boolean; allowed_pages?: string[] | null }) {
-    setUsers(us => us.map(u => u.id === id ? { ...u, ...patch } : u)) // optimistic
-    const res = await fetch('/api/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, ...patch }) })
-    if (!res.ok) { const j = await res.json(); setMsg('✗ ' + j.error); load() }
+  async function patchUser(id: string, updates: any) {
+    await supabase.from('profiles').update(updates).eq('id', id)
+    load()
+  }
+
+  async function addUser() {
+    if (!form.email || !form.password || form.password.length < 6) { setMsg('✗ Email & Sandi min. 6 karakter wajib diisi'); return }
+    setSaving(true); setMsg('')
+    const res = await fetch('/api/admin/create-user', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form)
+    })
+    setSaving(false)
+    if (!res.ok) { const e = await res.json(); setMsg('✗ Gagal: ' + (e.error || 'Unknown error')); return }
+    setShow(false); load()
   }
 
   async function delUser(id: string, email: string) {
-    if (!confirm(`Hapus akun ${email}? Tindakan ini permanen.`)) return
-    const res = await fetch('/api/users', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
-    const j = await res.json()
-    if (!res.ok) { setMsg('✗ ' + j.error); return }
-    setMsg('✓ Akun dihapus'); load()
-  }
-
-  async function openSettings(u: any) {
-    setSettingsUser(u)
-    setKasSaving(false)
-    setKasMsg('')
-    const { data } = await supabase.from('kas_akses').select('kas_id').eq('user_id', u.id)
-    setUserKasIds(new Set((data ?? []).map((r: any) => r.kas_id)))
-  }
-
-  function toggleKas(kasId: string) {
-    // Hanya ubah state lokal — disimpan ke DB saat tombol Selesai ditekan
-    setUserKasIds(prev => {
-      const next = new Set(prev)
-      if (next.has(kasId)) next.delete(kasId)
-      else next.add(kasId)
-      return next
+    if (!confirm(`Hapus permanen akun ${email}?`)) return
+    const res = await fetch('/api/admin/delete-user', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id })
     })
+    if (!res.ok) { const e = await res.json(); alert('Gagal: ' + e.error) }
+    load()
+  }
+
+  async function changePassword() {
+    if (newPassword.length < 6) return alert('Kata sandi minimal 6 karakter.')
+    setSaving(true)
+    const res = await fetch('/api/admin/reset-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: resetPwdUser.id, newPassword })
+    })
+    setSaving(false)
+    if (!res.ok) { const e = await res.json(); alert('Gagal reset sandi: ' + e.error) }
+    else { alert('Kata sandi berhasil diubah!'); setResetPwdUser(null); setNewPassword('') }
+  }
+
+  async function openSettings(user: any) {
+    setSettingsUser(user)
+    setKasMsg('')
+    const { data } = await supabase.from('user_kas_akses').select('kas_id').eq('user_id', user.id)
+    setUserKasIds(new Set((data || []).map(d => d.kas_id)))
+  }
+
+  function toggleKas(id: string) {
+    const next = new Set(userKasIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setUserKasIds(next)
+  }
+
+  async function togglePage(user: any, path: string) {
+    const current = user.allowed_pages || []
+    const next = current.includes(path) ? current.filter((p: string) => p !== path) : [...current, path]
+    await patchUser(user.id, { allowed_pages: next })
+    setSettingsUser({ ...user, allowed_pages: next })
   }
 
   async function saveKasAccess() {
     if (!settingsUser) return
     setKasSaving(true); setKasMsg('')
-    const res = await fetch('/api/users', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: settingsUser.id, kasIds: Array.from(userKasIds) }),
-    })
-    const j = await res.json()
+    await supabase.from('user_kas_akses').delete().eq('user_id', settingsUser.id)
+    if (userKasIds.size > 0) {
+      const inserts = Array.from(userKasIds).map(kid => ({ user_id: settingsUser.id, kas_id: kid }))
+      await supabase.from('user_kas_akses').insert(inserts)
+    }
     setKasSaving(false)
-    if (!res.ok) { setKasMsg('✗ ' + j.error); return }
-    setKasMsg('✓ Tersimpan!')
-    setTimeout(() => { setSettingsUser(null); setKasMsg('') }, 800)
+    setKasMsg('✓ Pengaturan kas berhasil disimpan')
+    setTimeout(() => { setSettingsUser(null) }, 1000)
   }
 
-  function togglePage(u: any, path: string) {
-    const current = new Set<string>(u.allowed_pages ?? [])
-    if (current.has(path)) current.delete(path)
-    else current.add(path)
-    const newPages = Array.from(current)
-    setSettingsUser({ ...u, allowed_pages: newPages })
-    patchUser(u.id, { allowed_pages: newPages })
-  }
-
-  async function changePassword() {
-    if (!resetPwdUser || !newPassword || newPassword.length < 6) {
-      setMsg('Kata sandi minimal 6 karakter.')
-      return
-    }
-    setSaving(true); setMsg('')
-    const res = await fetch('/api/users', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: resetPwdUser.id, password: newPassword }),
-    })
-    const j = await res.json()
-    setSaving(false)
-    if (!res.ok) setMsg('✗ ' + j.error)
-    else {
-      setMsg('✓ Kata sandi berhasil diubah!')
-      setResetPwdUser(null)
-      setNewPassword('')
-    }
-  }
-
-  if (allowed === null) return <main className="flex-1 p-8 text-gray-400">Memuat…</main>
+  if (allowed === null) return <main className="flex-1 p-6 lg:p-8 text-gray-400">Memuat…</main>
   if (!allowed) return (
-    <main className="flex-1 p-8"><div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 max-w-lg">
-      <h1 className="font-bold text-lg text-amber-800">🔒 Akses dibatasi</h1>
-      <p className="text-amber-700 text-sm mt-1">Halaman Kelola Pengguna hanya untuk Admin.</p>
-    </div></main>
+    <main className="flex-1 p-6 lg:p-8">
+      <div className="card p-6 max-w-lg border-amber-200 bg-amber-50">
+        <h1 className="font-bold text-lg text-amber-800">🔒 Akses dibatasi</h1>
+        <p className="text-amber-700 text-sm mt-1">Halaman Kelola Pengguna hanya untuk Admin.</p>
+      </div>
+    </main>
   )
 
   return (
-    <main className="flex-1 p-8">
-      <div className="mb-6 flex items-center justify-between">
+    <main className="flex-1 p-6 lg:p-8">
+      <ScopeBanner />
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Kelola Pengguna</h1>
-          <p className="text-gray-500 mt-1">Akun tim, role, izin approve, &amp; akses kas</p>
+          <h1 className="page-title">Kelola Pengguna</h1>
+          <p className="page-subtitle">Akun tim, role, izin approve, &amp; akses kas</p>
         </div>
-        <button onClick={() => { setForm({ ...emptyForm }); setMsg(''); setShow(true) }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Akun</button>
+        <button onClick={() => { setForm({ ...emptyForm }); setMsg(''); setShow(true) }} className="btn-primary">
+          <UserPlus className="w-4 h-4" /> Tambah Akun
+        </button>
       </div>
 
-      {msg && <div className="mb-4 text-sm bg-white border rounded-xl px-4 py-2.5">{msg}</div>}
-
-      <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
+      <div className="card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600">Email</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600">Nama</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600 w-32">Role</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600 w-28">Izin approve</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600 w-44">Akses (Kas & Halaman)</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600">Login terakhir</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600 w-40">Aksi</th>
-            </tr>
+          <thead className="tbl-head">
+            <tr>{['Email', 'Nama', 'Role', 'Izin approve', 'Akses', 'Login terakhir', 'Aksi'].map((h, i) => (
+              <th key={h} className={`tbl-th ${i === 2 ? 'w-32' : i === 3 ? 'w-28' : i === 4 ? 'w-28' : i === 6 ? 'w-32' : ''}`}>{h}</th>
+            ))}</tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {users.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">Memuat / belum ada pengguna</td></tr> :
-              users.map(u => {
-                const isProtected = u.is_super_admin || u.role === 'admin'
-                return (
-                  <tr key={u.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 font-medium">{u.email}</td>
-                    <td className="px-5 py-3 text-gray-600">{u.full_name ?? '-'}</td>
-                    <td className="px-5 py-3">
-                      {isProtected ? (
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${ROLE_BADGE[u.role] ?? 'bg-gray-100 text-gray-600'}`}>{u.role ?? '-'}</span>
-                      ) : (
-                        <select value={u.role} onChange={e => patchUser(u.id, { role: e.target.value })} className="border rounded-lg px-2 py-1 text-xs capitalize w-full">
-                          {EDITABLE_ROLES.filter(r => isSuper || r !== 'admin').map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                      )}
-                      {u.is_super_admin && <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-violet-100 text-violet-700">super</span>}
-                    </td>
-                    <td className="px-5 py-3">
-                      {isProtected ? <span className="text-xs text-gray-400">selalu</span> : (
-                        <label className="inline-flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
-                          <input type="checkbox" checked={!!u.boleh_approve_pengeluaran} onChange={e => patchUser(u.id, { boleh_approve_pengeluaran: e.target.checked })} />
-                          boleh ACC
-                        </label>
-                      )}
-                    </td>
-                    <td className="px-5 py-3">
-                      {isProtected ? <span className="text-xs text-gray-400">semua akses</span> :
-                        isSuper ? (
-                          <button onClick={() => openSettings(u)} title="Pengaturan Akses" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
-                            <Settings className="w-4 h-4" />
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} className="py-16 text-center text-gray-400 text-sm">Memuat…</td></tr>
+            ) : users.length === 0 ? (
+              <tr><td colSpan={7} className="py-16 text-center text-gray-400 text-sm">Belum ada pengguna</td></tr>
+            ) : users.map(u => {
+              const isProtected = u.is_super_admin || (!isSuper && u.role === 'admin')
+              return (
+                <tr key={u.id} className="tbl-row">
+                  <td className="tbl-td font-medium text-gray-800">{u.email}</td>
+                  <td className="tbl-td text-gray-600">{u.full_name ?? '-'}</td>
+                  <td className="tbl-td">
+                    {isProtected ? (
+                      <span className={`${ROLE_BADGE[u.role] ?? 'badge badge-gray'} capitalize`}>{u.role ?? '-'}</span>
+                    ) : (
+                      <select value={u.role} onChange={e => patchUser(u.id, { role: e.target.value })} className="form-input py-1.5 px-2 text-xs w-full capitalize">
+                        {EDITABLE_ROLES.filter(r => isSuper || r !== 'admin').map(r => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    )}
+                    {u.is_super_admin && <span className="ml-1 badge badge-violet">super</span>}
+                  </td>
+                  <td className="tbl-td">
+                    {isProtected ? <span className="text-xs text-gray-400 font-medium">selalu</span> : (
+                      <label className="flex items-center gap-1.5 text-xs font-medium text-gray-600 cursor-pointer">
+                        <input type="checkbox" checked={!!u.boleh_approve_pengeluaran} onChange={e => patchUser(u.id, { boleh_approve_pengeluaran: e.target.checked })} className="accent-brand-600 rounded" />
+                        boleh ACC
+                      </label>
+                    )}
+                  </td>
+                  <td className="tbl-td">
+                    {isProtected ? <span className="text-xs text-gray-400 font-medium">semua akses</span> :
+                      isSuper ? (
+                        <button onClick={() => openSettings(u)} title="Pengaturan Akses" className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-colors">
+                          <Settings className="w-4 h-4" />
+                        </button>
+                      ) : <span className="text-gray-300">—</span>}
+                  </td>
+                  <td className="tbl-td text-gray-500 text-xs">{u.last_sign_in_at ? formatTanggal(u.last_sign_in_at) : 'belum pernah'}</td>
+                  <td className="tbl-td">
+                    {isProtected && !isSuper ? (
+                      <span className="text-xs text-gray-300">terlindungi</span>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        {isSuper && (
+                          <button onClick={() => setResetPwdUser(u)} title="Ganti Sandi" className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-colors">
+                            <KeyRound className="w-4 h-4" />
                           </button>
-                        ) : <span className="text-xs text-gray-300">—</span>}
-                    </td>
-                    <td className="px-5 py-3 text-gray-500">{u.last_sign_in_at ? formatTanggal(u.last_sign_in_at) : 'belum pernah'}</td>
-                    <td className="px-5 py-3">
-                      {isProtected ? (
-                        <span className="text-xs text-gray-300">terlindungi</span>
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          {isSuper && (
-                            <button onClick={() => setResetPwdUser(u)} title="Ganti Sandi" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
-                              <KeyRound className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button onClick={() => delUser(u.id, u.email)} title="Hapus" className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                        )}
+                        {!(isSuper && u.id === users.find(u => u.is_super_admin)?.id) && ( // Jangan hapus superadmin pertama
+                          <button onClick={() => delUser(u.id, u.email)} title="Hapus" className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
                             <Trash2 className="w-4 h-4" />
                           </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
+                        )}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
 
-      {!isSuper && <p className="text-[11px] text-gray-400 mt-2">Pengaturan akses kas hanya untuk Super Admin.</p>}
+      {!isSuper && <p className="text-[11px] text-gray-400 mt-3 font-medium">Pengaturan akses kas &amp; sandi tim hanya untuk Super Admin.</p>}
 
-      {/* Modal tambah akun */}
       {show && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setShow(false)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg mb-4">Tambah Akun Tim</h3>
-            <div className="space-y-3">
-              <input type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-              <input placeholder="Nama lengkap" value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-              <input type="text" placeholder="Kata sandi awal (min. 6)" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-              <label className="text-sm text-gray-600 block">Role
-                <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+        <div className="modal-overlay" onClick={() => setShow(false)}>
+          <div className="modal-box max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="font-bold text-lg text-gray-900">Tambah Akun Tim</h3>
+            </div>
+            <div className="modal-body space-y-4">
+              <div className="space-y-1.5">
+                <label className="form-label">Email</label>
+                <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Nama Lengkap</label>
+                <input value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Kata Sandi Awal (min. 6)</label>
+                <input type="text" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Role</label>
+                <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="form-input">
                   {isSuper && <option value="admin">Admin</option>}
                   <option value="bendahara">Bendahara (kelola transaksi)</option>
                   <option value="majelis">Majelis (verifikator)</option>
                   <option value="volunteer">Volunteer (pencatat lap. saja)</option>
                 </select>
-                <span className="text-[11px] text-gray-400">Tidak ada opsi Admin/Super Admin di sini — sesuai kebijakan.</span>
-              </label>
+                <p className="text-[11px] text-gray-400 mt-1 font-medium">Sesuai kebijakan, tidak ada opsi Super Admin di sini.</p>
+              </div>
+              {msg && <p className="text-xs text-rose-600 bg-rose-50 px-3 py-2 rounded-xl mt-2">{msg}</p>}
             </div>
-            {msg && <p className="text-xs mt-3 text-red-600">{msg.startsWith('✗') ? msg : ''}</p>}
-            <div className="flex gap-2 mt-5">
-              <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-              <button onClick={addUser} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Membuat…' : 'Buat akun'}</button>
+            <div className="modal-footer">
+              <button onClick={() => setShow(false)} className="btn-secondary flex-1 justify-center">Batal</button>
+              <button onClick={addUser} disabled={saving} className="btn-primary flex-1 justify-center">{saving ? 'Membuat…' : 'Buat Akun'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal ganti password */}
       {resetPwdUser && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setResetPwdUser(null)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-soft" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg mb-2">Ganti Kata Sandi</h3>
-            <p className="text-sm text-gray-500 mb-4">Reset sandi untuk <strong>{resetPwdUser.full_name || resetPwdUser.email}</strong>.</p>
-            <input type="text" placeholder="Sandi baru (min 6)" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full border rounded-xl px-3 py-2 text-sm mb-4" />
-            <div className="flex gap-2">
-              <button onClick={() => setResetPwdUser(null)} className="flex-1 py-2 text-sm font-medium border rounded-xl hover:bg-gray-50">Batal</button>
-              <button onClick={changePassword} disabled={saving} className="flex-1 py-2 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
+        <div className="modal-overlay" onClick={() => setResetPwdUser(null)}>
+          <div className="modal-box max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="font-bold text-lg text-gray-900">Ganti Kata Sandi</h3>
+              <p className="text-sm text-gray-500 mt-1">Reset sandi untuk <strong>{resetPwdUser.full_name || resetPwdUser.email}</strong>.</p>
+            </div>
+            <div className="modal-body space-y-4">
+              <div className="space-y-1.5">
+                <label className="form-label">Sandi Baru (min. 6)</label>
+                <input type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-input" />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setResetPwdUser(null)} className="btn-secondary flex-1 justify-center">Batal</button>
+              <button onClick={changePassword} disabled={saving} className="btn-primary flex-1 justify-center">{saving ? 'Menyimpan…' : 'Simpan'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal akses kas dan halaman */}
       {settingsUser && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setSettingsUser(null)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-soft max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg mb-1">Pengaturan Akses — {settingsUser.full_name ?? settingsUser.email}</h3>
-            <p className="text-xs text-gray-500 mb-4">Centang izin yang ingin Anda berikan kepada pengguna ini.</p>
+        <div className="modal-overlay" onClick={() => setSettingsUser(null)}>
+          <div className="modal-box max-w-lg max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="modal-header shrink-0">
+              <h3 className="font-bold text-lg text-gray-900">Pengaturan Akses</h3>
+              <p className="text-sm text-gray-500 mt-1">{settingsUser.full_name ?? settingsUser.email}</p>
+            </div>
             
-            <div className="overflow-y-auto space-y-6 flex-1 pr-2">
+            <div className="modal-body flex-1 overflow-y-auto space-y-6 pr-1 my-4">
               <div>
-                <h4 className="font-semibold text-sm mb-2 text-gray-700 border-b pb-1">Akses Kas Mobile (Bendahara)</h4>
-                <div className="space-y-1.5">
+                <h4 className="font-semibold text-sm mb-3 text-brand-700 bg-brand-50 px-3 py-1.5 rounded-lg inline-block">Akses Kas Mobile</h4>
+                <div className="space-y-1">
                   {allKas.map(k => (
-                    <label key={k.id} className="flex items-center gap-2.5 text-sm px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer">
-                      <input type="checkbox" checked={userKasIds.has(k.id)} onChange={() => toggleKas(k.id)} />
-                      <span className="font-medium">{k.nama}</span>
-                      {k.penanggung_jawab && <span className="text-xs text-gray-400">· {k.penanggung_jawab}</span>}
+                    <label key={k.id} className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-100 transition-all">
+                      <div>
+                        <span className="font-semibold text-sm text-gray-800">{k.nama}</span>
+                        {k.penanggung_jawab && <p className="text-xs text-gray-400 mt-0.5">{k.penanggung_jawab}</p>}
+                      </div>
+                      <input type="checkbox" checked={userKasIds.has(k.id)} onChange={() => toggleKas(k.id)} className="accent-brand-600 w-4 h-4" />
                     </label>
                   ))}
                   {allKas.length === 0 && <p className="text-gray-400 text-sm">Belum ada kas aktif.</p>}
@@ -316,14 +317,17 @@ export default function UsersPage() {
               </div>
 
               <div>
-                <h4 className="font-semibold text-sm mb-2 text-gray-700 border-b pb-1">Akses Halaman Sidebar Web</h4>
-                <div className="space-y-1.5">
+                <h4 className="font-semibold text-sm mb-3 text-violet-700 bg-violet-50 px-3 py-1.5 rounded-lg inline-block">Akses Halaman Web</h4>
+                <div className="space-y-1">
                   {ALL_PAGES.map(p => {
                     const checked = (settingsUser.allowed_pages ?? []).includes(p.path)
                     return (
-                      <label key={p.path} className="flex items-center gap-2.5 text-sm px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer">
-                        <input type="checkbox" checked={checked} onChange={() => togglePage(settingsUser, p.path)} />
-                        <span className="font-medium">{p.label} <span className="text-xs text-gray-400 font-normal">({p.path})</span></span>
+                      <label key={p.path} className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-100 transition-all">
+                        <div>
+                          <span className="font-semibold text-sm text-gray-800">{p.label}</span>
+                          <span className="text-xs text-gray-400 font-normal ml-2">{p.path}</span>
+                        </div>
+                        <input type="checkbox" checked={checked} onChange={() => togglePage(settingsUser, p.path)} className="accent-violet-600 w-4 h-4" />
                       </label>
                     )
                   })}
@@ -331,9 +335,11 @@ export default function UsersPage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t mt-4 shrink-0">
-              {kasMsg && <p className={`text-xs mb-3 font-medium ${kasMsg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>{kasMsg}</p>}
-              <button onClick={saveKasAccess} disabled={kasSaving} className="w-full bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{kasSaving ? 'Menyimpan…' : 'Selesai & Simpan'}</button>
+            <div className="modal-footer shrink-0">
+              {kasMsg && <p className={`text-xs font-semibold mr-auto ${kasMsg.startsWith('✓') ? 'text-emerald-600' : 'text-rose-600'}`}>{kasMsg}</p>}
+              <button onClick={saveKasAccess} disabled={kasSaving} className="btn-primary w-full justify-center py-2.5">
+                {kasSaving ? 'Menyimpan…' : 'Selesai & Simpan'}
+              </button>
             </div>
           </div>
         </div>

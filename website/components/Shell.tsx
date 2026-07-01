@@ -2,45 +2,64 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
+import { Bell, Search } from 'lucide-react'
 
-const SECTION_LABELS: { href: string; label: string }[] = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/sesi-ibadah', label: 'Sesi Ibadah' },
-  { href: '/persembahan', label: 'Persembahan' },
-  { href: '/pengeluaran', label: 'Pengeluaran' },
-  { href: '/anggaran', label: 'Anggaran' },
-  { href: '/perpuluhan', label: 'Perpuluhan' },
-  { href: '/akun', label: 'Akun & Kas' },
-  { href: '/jurnal', label: 'Jurnal Umum' },
-  { href: '/laporan', label: 'Laporan' },
-  { href: '/backup', label: 'Backup & Recovery' },
+const SECTION_LABELS: { href: string; label: string; emoji: string }[] = [
+  { href: '/dashboard',    label: 'Dashboard',           emoji: '🏠' },
+  { href: '/sesi-ibadah',  label: 'Sesi Ibadah',         emoji: '⛪' },
+  { href: '/persembahan',  label: 'Persembahan',         emoji: '💝' },
+  { href: '/pengeluaran',  label: 'Pengeluaran',         emoji: '🧾' },
+  { href: '/anggaran',     label: 'Anggaran',            emoji: '📅' },
+  { href: '/perpuluhan',   label: 'Perpuluhan',          emoji: '✅' },
+  { href: '/akun',         label: 'Akun & Kas',          emoji: '💳' },
+  { href: '/analitik-kas', label: 'Analitik Kas',        emoji: '📈' },
+  { href: '/jurnal',       label: 'Jurnal Umum',         emoji: '📒' },
+  { href: '/laporan',      label: 'Laporan Keuangan',    emoji: '📊' },
+  { href: '/kategori',     label: 'Kategori',            emoji: '🏷️' },
+  { href: '/users',        label: 'Kelola Pengguna',     emoji: '👥' },
+  { href: '/backup',       label: 'Backup & Recovery',   emoji: '🗄️' },
 ]
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [today, setToday] = useState('')
+  const [greeting, setGreeting] = useState('')
 
   useEffect(() => {
-    setToday(new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
+    const now = new Date()
+    setToday(now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
+    const h = now.getHours()
+    setGreeting(h < 12 ? 'Selamat pagi' : h < 15 ? 'Selamat siang' : h < 18 ? 'Selamat sore' : 'Selamat malam')
   }, [])
 
-  // Halaman publik / standalone — tanpa shell (punya tampilan sendiri)
   if (pathname === '/login' || pathname === '/') return <>{children}</>
 
-  const section = SECTION_LABELS.find(s => pathname.startsWith(s.href))?.label ?? ''
+  const section = SECTION_LABELS.find(s => pathname.startsWith(s.href))
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen" style={{ background: '#f0f2fb' }}>
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-20 h-14 flex items-center justify-between px-6 bg-white/80 backdrop-blur border-b border-slate-200">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-400">ESC Finance</span>
-            <span className="text-slate-300">/</span>
-            <span className="font-semibold text-slate-700">{section}</span>
+        {/* Top Header */}
+        <header className="sticky top-0 z-20 h-16 flex items-center justify-between px-6 border-b border-indigo-100/60"
+          style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)' }}>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400 text-sm hidden sm:block">{greeting},</span>
+            <span className="text-gray-600 text-sm font-semibold hidden sm:block">selamat bekerja!</span>
+            {section && (
+              <>
+                <span className="text-gray-200 mx-1 hidden sm:block">|</span>
+                <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">{section.emoji} {section.label}</span>
+              </>
+            )}
           </div>
-          <div className="text-xs text-slate-400 hidden sm:block">{today}</div>
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400 hidden lg:block">{today}</span>
+          </div>
         </header>
+        {/* Page Content */}
         <div key={pathname} className="flex-1 flex flex-col animate-fadein">
           {children}
         </div>

@@ -2,13 +2,14 @@
 export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, formatTanggal, type SesiIbadah } from '@/lib/supabase'
-import { RowAction, RowActions } from '@/components/RowAction'
+import { RowAction } from '@/components/RowAction'
 import ScopeBanner from '@/components/ScopeBanner'
+import Link from 'next/link'
 
 const STATUS_BADGE: Record<string, { c: string; t: string }> = {
-  draft: { c: 'bg-amber-100 text-amber-700', t: 'Draft' },
-  balanced: { c: 'bg-blue-100 text-blue-700', t: 'Balanced' },
-  signed_locked: { c: 'bg-green-100 text-green-700', t: '🔒 Terkunci' },
+  draft:         { c: 'badge badge-yellow', t: 'Draft' },
+  balanced:      { c: 'badge badge-blue',   t: 'Balanced' },
+  signed_locked: { c: 'badge badge-green',  t: '🔒 Terkunci' },
 }
 
 export default function SesiIbadahPage() {
@@ -16,8 +17,6 @@ export default function SesiIbadahPage() {
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState<string>('')
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
-
-  // Edit modal state
   const [editSesi, setEditSesi] = useState<SesiIbadah | null>(null)
   const [editNama, setEditNama] = useState('')
   const [editTanggal, setEditTanggal] = useState('')
@@ -39,7 +38,6 @@ export default function SesiIbadahPage() {
   async function delSesi(s: SesiIbadah) {
     if (s.status === 'signed_locked') { alert('Sesi yang sudah terkunci tidak bisa dihapus.'); return }
     if (!confirm(`Hapus sesi "${s.jenis_ibadah}" (${s.tanggal})? Denominasi & kategori sesi ini ikut terhapus. Permanen.`)) return
-    // hapus persembahan sesi (un-post jurnal + kembalikan saldo), lalu sesi (cascade pecahan)
     const { error: e1 } = await supabase.from('persembahan').delete().eq('sesi_id', s.id)
     if (e1) { alert('Gagal hapus persembahan sesi: ' + e1.message); return }
     const { error: e2 } = await supabase.from('sesi_ibadah').delete().eq('id', s.id)
@@ -69,81 +67,99 @@ export default function SesiIbadahPage() {
 
   return (
     <>
-      <main className="flex-1 p-8">
-          <ScopeBanner />
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Sesi Ibadah</h1>
-            <p className="text-gray-500 mt-1">Rekonsiliasi kas pasca-ibadah (dari aplikasi mobile)</p>
+      <main className="flex-1 p-6 lg:p-8">
+        <ScopeBanner />
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Sesi Ibadah</h1>
+            <p className="page-subtitle">Rekonsiliasi kas pasca-ibadah (dari aplikasi mobile)</p>
           </div>
+        </div>
 
-          <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>{['Tanggal', 'Jenis Ibadah', 'Kas', 'Total Fisik', 'Balancing', 'Status', ''].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="p-4">
-                      <div className="space-y-4">
-                        {[...Array(4)].map((_, i) => <div key={i} className="h-4 bg-gray-200 rounded animate-pulse" />)}
+        <div className="card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="tbl-head">
+              <tr>
+                {['Tanggal', 'Nama Sesi', 'Kas', 'Total Fisik', 'Balancing', 'Status', 'Aksi'].map(h => (
+                  <th key={h} className="tbl-th">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={7} className="px-5 py-8">
+                  <div className="space-y-3">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="flex gap-4">
+                        <div className="h-4 bg-brand-50 rounded-full w-24 animate-pulse" />
+                        <div className="h-4 bg-brand-50 rounded-full flex-1 animate-pulse" />
+                        <div className="h-4 bg-brand-50 rounded-full w-20 animate-pulse" />
+                      </div>
+                    ))}
+                  </div>
+                </td></tr>
+              ) : data.length === 0 ? (
+                <tr><td colSpan={7} className="py-16 text-center text-gray-400 text-sm">Belum ada sesi ibadah</td></tr>
+              ) : data.map(s => {
+                const match = Number(s.selisih) === 0
+                const badge = STATUS_BADGE[s.status] ?? { c: 'badge badge-gray', t: s.status }
+                return (
+                  <tr key={s.id} className="tbl-row">
+                    <td className="tbl-td whitespace-nowrap">{formatTanggal(s.tanggal)}{s.jam ? `, ${s.jam.slice(0, 5)}` : ''}</td>
+                    <td className="tbl-td">
+                      <span className="font-semibold text-gray-800">{s.nama_sesi || s.jenis_ibadah}</span>
+                      {s.nama_sesi && <span className="block text-xs text-gray-400">{s.jenis_ibadah}</span>}
+                    </td>
+                    <td className="tbl-td text-gray-500">{s.kas?.nama ?? '-'}</td>
+                    <td className="tbl-td font-bold text-gray-800">{formatRupiah(s.total_fisik)}</td>
+                    <td className="tbl-td">
+                      <span className={match ? 'badge badge-green' : 'badge badge-red'}>{match ? 'MATCH' : 'MISMATCH'}</span>
+                    </td>
+                    <td className="tbl-td"><span className={badge.c}>{badge.t}</span></td>
+                    <td className="tbl-td">
+                      <div className="flex items-center gap-1.5">
+                        <Link href={`/sesi-ibadah/${s.id}`}>
+                          <RowAction>Lihat</RowAction>
+                        </Link>
+                        {isSuperAdmin && s.status !== 'signed_locked' && (
+                          <RowAction variant="default" onClick={() => openEdit(s)}>Edit</RowAction>
+                        )}
+                        {s.status !== 'signed_locked' && role !== 'bendahara' && (
+                          <RowAction variant="danger" onClick={() => delSesi(s)}>Hapus</RowAction>
+                        )}
                       </div>
                     </td>
                   </tr>
-                ) :
-                  data.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">Belum ada sesi ibadah</td></tr> :
-                  data.map(s => {
-                    const match = Number(s.selisih) === 0
-                    return (
-                      <tr key={s.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap">{formatTanggal(s.tanggal)}{s.jam ? `, ${s.jam.slice(0, 5)}` : ''}</td>
-                        <td className="px-4 py-3 font-medium">{s.nama_sesi || s.jenis_ibadah}{s.nama_sesi ? <span className="block text-xs font-normal text-gray-400">{s.jenis_ibadah}</span> : null}</td>
-                        <td className="px-4 py-3 text-gray-500">{s.kas?.nama ?? '-'}</td>
-                        <td className="px-4 py-3 font-semibold">{formatRupiah(s.total_fisik)}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${match ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{match ? 'MATCH' : 'MISMATCH'}</span>
-                        </td>
-                        <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_BADGE[s.status]?.c}`}>{STATUS_BADGE[s.status]?.t}</span></td>
-                        <td className="px-4 py-3 text-right whitespace-nowrap">
-                          <RowActions>
-                            <RowAction href={`/sesi-ibadah/${s.id}`}>Lihat</RowAction>
-                            {isSuperAdmin && s.status !== 'signed_locked' && (
-                              <RowAction variant="default" onClick={() => openEdit(s)}>Edit</RowAction>
-                            )}
-                            {s.status !== 'signed_locked' && role !== 'bendahara' && (
-                              <RowAction variant="danger" onClick={() => delSesi(s)}>Hapus</RowAction>
-                            )}
-                          </RowActions>
-                        </td>
-                      </tr>
-                    )
-                  })}
-              </tbody>
-            </table>
-          </div>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </main>
 
       {editSesi && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Edit Sesi Ibadah</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-700">Nama Sesi</label>
-                <input className="mt-1 w-full border rounded-xl px-3 py-2 text-sm" value={editNama} onChange={e => setEditNama(e.target.value)} />
+        <div className="modal-overlay" onClick={() => setEditSesi(null)}>
+          <div className="modal-box max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="font-bold text-lg text-gray-900">Edit Sesi Ibadah</h3>
+            </div>
+            <div className="modal-body space-y-4">
+              <div className="space-y-1.5">
+                <label className="form-label">Nama Sesi</label>
+                <input className="form-input" value={editNama} onChange={e => setEditNama(e.target.value)} />
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Tanggal</label>
-                <input type="date" className="mt-1 w-full border rounded-xl px-3 py-2 text-sm" value={editTanggal} onChange={e => setEditTanggal(e.target.value)} />
+              <div className="space-y-1.5">
+                <label className="form-label">Tanggal</label>
+                <input type="date" className="form-input" value={editTanggal} onChange={e => setEditTanggal(e.target.value)} />
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Jam (opsional)</label>
-                <input type="time" className="mt-1 w-full border rounded-xl px-3 py-2 text-sm" value={editJam} onChange={e => setEditJam(e.target.value)} />
+              <div className="space-y-1.5">
+                <label className="form-label">Jam (opsional)</label>
+                <input type="time" className="form-input" value={editJam} onChange={e => setEditJam(e.target.value)} />
               </div>
             </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditSesi(null)} className="flex-1 border rounded-xl py-2 text-sm hover:bg-gray-50">Batal</button>
-              <button onClick={saveEdit} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold hover:bg-blue-700">Simpan</button>
+            <div className="modal-footer">
+              <button onClick={() => setEditSesi(null)} className="btn-secondary flex-1 justify-center">Batal</button>
+              <button onClick={saveEdit} className="btn-primary flex-1 justify-center">Simpan</button>
             </div>
           </div>
         </div>

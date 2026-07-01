@@ -2,10 +2,14 @@
 export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, formatTanggal, type Akun } from '@/lib/supabase'
+import { Plus, PlusCircle } from 'lucide-react'
 
 type Line = { akun_id: string; debit: string; kredit: string }
+
 const SUMBER_BADGE: Record<string, string> = {
-  persembahan: 'bg-green-100 text-green-700', pengeluaran: 'bg-blue-100 text-blue-700', manual: 'bg-gray-100 text-gray-600',
+  persembahan: 'badge badge-green',
+  pengeluaran: 'badge badge-blue',
+  manual:      'badge badge-gray',
 }
 
 export default function JurnalPage() {
@@ -54,75 +58,104 @@ export default function JurnalPage() {
   }
 
   return (
-    <main className="flex-1 p-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Jurnal Umum</h1>
-            <p className="text-gray-500 mt-1">Pencatatan transaksi &amp; penyesuaian manual (double-entry)</p>
-          </div>
-          <button onClick={() => setShow(true)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Jurnal Baru</button>
+    <main className="flex-1 p-6 lg:p-8">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Jurnal Umum</h1>
+          <p className="page-subtitle">Pencatatan transaksi &amp; penyesuaian manual (double-entry)</p>
         </div>
+        <button onClick={() => setShow(true)} className="btn-primary">
+          <Plus className="w-4 h-4" /> Jurnal Baru
+        </button>
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>{['Tanggal', 'Keterangan', 'Akun (Debit / Kredit)', 'Sumber', 'Nilai'].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? <tr><td colSpan={5} className="text-center py-8 text-gray-400">Memuat...</td></tr> :
-                jurnal.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-gray-400">Belum ada jurnal</td></tr> :
-                jurnal.map(j => {
-                  const nilai = (j.detail ?? []).reduce((s: number, d: any) => s + Number(d.debit), 0)
-                  return (
-                    <tr key={j.id} className="hover:bg-gray-50 align-top">
-                      <td className="px-4 py-3 whitespace-nowrap">{formatTanggal(j.tanggal)}</td>
-                      <td className="px-4 py-3 max-w-[220px]">{j.keterangan}</td>
-                      <td className="px-4 py-3 text-xs text-gray-500">
-                        {(j.detail ?? []).map((d: any, i: number) => (
-                          <div key={i}>{d.akun?.kode_akun} {d.akun?.nama_akun} — {Number(d.debit) > 0 ? `D ${formatRupiah(d.debit)}` : `K ${formatRupiah(d.kredit)}`}</div>
-                        ))}
-                      </td>
-                      <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${SUMBER_BADGE[j.sumber]}`}>{j.sumber}</span></td>
-                      <td className="px-4 py-3 font-semibold whitespace-nowrap">{formatRupiah(nilai)}</td>
-                    </tr>
-                  )
-                })}
-            </tbody>
-          </table>
-        </div>
+      <div className="card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="tbl-head">
+            <tr>{['Tanggal', 'Keterangan', 'Akun (Debit / Kredit)', 'Sumber', 'Nilai'].map(h => (
+              <th key={h} className="tbl-th">{h}</th>
+            ))}</tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={5} className="px-5 py-8">
+                <div className="space-y-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="h-4 bg-brand-50 rounded-full w-24 animate-pulse" />
+                      <div className="h-4 bg-brand-50 rounded-full flex-1 animate-pulse" />
+                    </div>
+                  ))}
+                </div>
+              </td></tr>
+            ) : jurnal.length === 0 ? (
+              <tr><td colSpan={5} className="py-16 text-center text-gray-400 text-sm">Belum ada jurnal</td></tr>
+            ) : jurnal.map(j => {
+              const nilai = (j.detail ?? []).reduce((s: number, d: any) => s + Number(d.debit), 0)
+              return (
+                <tr key={j.id} className="tbl-row align-top">
+                  <td className="tbl-td whitespace-nowrap">{formatTanggal(j.tanggal)}</td>
+                  <td className="tbl-td max-w-[200px] font-medium text-gray-800">{j.keterangan}</td>
+                  <td className="tbl-td text-xs text-gray-500 space-y-0.5">
+                    {(j.detail ?? []).map((d: any, i: number) => (
+                      <div key={i}>
+                        <span className="font-medium text-gray-700">{d.akun?.kode_akun} {d.akun?.nama_akun}</span>
+                        {' — '}
+                        {Number(d.debit) > 0
+                          ? <span className="text-emerald-600 font-semibold">D {formatRupiah(d.debit)}</span>
+                          : <span className="text-rose-500 font-semibold">K {formatRupiah(d.kredit)}</span>}
+                      </div>
+                    ))}
+                  </td>
+                  <td className="tbl-td"><span className={`${SUMBER_BADGE[j.sumber]} capitalize`}>{j.sumber}</span></td>
+                  <td className="tbl-td font-bold text-gray-800 whitespace-nowrap">{formatRupiah(nilai)}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
 
-        {show && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setShow(false)}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-2xl" onClick={e => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-4">Jurnal Baru</h3>
-              <div className="flex gap-3 mb-3">
-                <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} className="border rounded-xl px-3 py-2 text-sm" />
-                <input placeholder="Keterangan" value={keterangan} onChange={e => setKeterangan(e.target.value)} className="flex-1 border rounded-xl px-3 py-2 text-sm" />
+      {show && (
+        <div className="modal-overlay" onClick={() => setShow(false)}>
+          <div className="modal-box max-w-2xl" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="font-bold text-lg text-gray-900">Jurnal Baru</h3>
+              <p className="text-sm text-gray-400 mt-1">Pastikan total Debit = Kredit (double-entry)</p>
+            </div>
+            <div className="modal-body">
+              <div className="flex gap-3 mb-4">
+                <input type="date" value={tanggal} onChange={e => setTanggal(e.target.value)} className="form-input w-auto" />
+                <input placeholder="Keterangan" value={keterangan} onChange={e => setKeterangan(e.target.value)} className="form-input flex-1" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {lines.map((l, i) => (
                   <div key={i} className="flex gap-2">
-                    <select value={l.akun_id} onChange={e => setLine(i, { akun_id: e.target.value })} className="flex-1 border rounded-lg px-2 py-2 text-xs">
+                    <select value={l.akun_id} onChange={e => setLine(i, { akun_id: e.target.value })} className="form-input flex-1">
                       <option value="">— Pilih akun —</option>
                       {akun.map(a => <option key={a.id} value={a.id}>{a.kode_akun} · {a.nama_akun}</option>)}
                     </select>
-                    <input type="number" placeholder="Debit" value={l.debit} onChange={e => setLine(i, { debit: e.target.value, kredit: '' })} className="w-28 border rounded-lg px-2 py-2 text-xs" />
-                    <input type="number" placeholder="Kredit" value={l.kredit} onChange={e => setLine(i, { kredit: e.target.value, debit: '' })} className="w-28 border rounded-lg px-2 py-2 text-xs" />
+                    <input type="number" placeholder="Debit" value={l.debit} onChange={e => setLine(i, { debit: e.target.value, kredit: '' })} className="form-input w-28" />
+                    <input type="number" placeholder="Kredit" value={l.kredit} onChange={e => setLine(i, { kredit: e.target.value, debit: '' })} className="form-input w-28" />
                   </div>
                 ))}
               </div>
-              <button onClick={() => setLines([...lines, { akun_id: '', debit: '', kredit: '' }])} className="text-blue-700 text-xs font-medium mt-2">+ Tambah baris</button>
-              <div className={`flex justify-between text-sm mt-3 px-1 font-semibold ${balanced ? 'text-green-600' : 'text-red-600'}`}>
-                <span>Total Debit: {formatRupiah(totalDebit)} · Kredit: {formatRupiah(totalKredit)}</span>
+              <button onClick={() => setLines([...lines, { akun_id: '', debit: '', kredit: '' }])}
+                className="flex items-center gap-1.5 text-brand-600 text-xs font-semibold mt-3 hover:text-brand-700">
+                <PlusCircle className="w-3.5 h-3.5" /> Tambah baris
+              </button>
+              <div className={`flex justify-between text-sm mt-4 px-3 py-2.5 rounded-xl font-semibold ${balanced ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+                <span>Debit: {formatRupiah(totalDebit)} · Kredit: {formatRupiah(totalKredit)}</span>
                 <span>{balanced ? '✓ Seimbang' : 'Belum seimbang'}</span>
               </div>
-              <div className="flex gap-2 mt-5">
-                <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={save} disabled={!balanced || saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-50">{saving ? 'Menyimpan…' : 'Simpan jurnal'}</button>
-              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShow(false)} className="btn-secondary flex-1 justify-center">Batal</button>
+              <button onClick={save} disabled={!balanced || saving} className="btn-primary flex-1 justify-center">{saving ? 'Menyimpan…' : 'Simpan Jurnal'}</button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </main>
   )
 }

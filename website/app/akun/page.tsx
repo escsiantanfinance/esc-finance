@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, type Kas, type Akun } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import ScopeBanner from '@/components/ScopeBanner'
+import { Plus, Edit2 } from 'lucide-react'
 
 const TIPE_BADGE: Record<string, string> = {
-  aset: 'bg-blue-100 text-blue-700', kewajiban: 'bg-amber-100 text-amber-700',
-  ekuitas: 'bg-violet-100 text-violet-700', pendapatan: 'bg-green-100 text-green-700',
-  beban: 'bg-red-100 text-red-700',
+  aset:       'badge badge-blue',
+  kewajiban:  'badge badge-yellow',
+  ekuitas:    'badge badge-violet',
+  pendapatan: 'badge badge-green',
+  beban:      'badge badge-red',
 }
 
 export default function AkunKasPage() {
@@ -68,7 +71,6 @@ export default function AkunKasPage() {
   async function saveEdit() {
     if (!edit || !editForm.nama) return
     setSaving(true)
-    // Saldo awal berubah → geser saldo_saat_ini dengan selisih yang sama (anti-drift)
     const newAwal = Number(editForm.saldo_awal || 0)
     const delta = newAwal - Number(edit.saldo_awal ?? 0)
     const { error } = await supabase.from('kas').update({
@@ -111,113 +113,167 @@ export default function AkunKasPage() {
   }
 
   return (
-    <main className="flex-1 p-8">
-        <ScopeBanner />
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Akun &amp; Kas</h1>
-            <p className="text-gray-500 mt-1">Manajemen multi-kas &amp; Bagan Akun (COA)</p>
-          </div>
-          {isSuper && <button onClick={() => setShowAdd(true)} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Kas</button>}
+    <main className="flex-1 p-6 lg:p-8">
+      <ScopeBanner />
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Akun &amp; Kas</h1>
+          <p className="page-subtitle">Manajemen multi-kas &amp; Bagan Akun (COA)</p>
         </div>
+        {isSuper && (
+          <button onClick={() => setShowAdd(true)} className="btn-primary">
+            <Plus className="w-4 h-4" /> Tambah Kas
+          </button>
+        )}
+      </div>
 
-        {/* Kas cards — klik untuk ubah/nonaktifkan */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {kas.map(k => (
-            <button key={k.id} onClick={() => openEdit(k)} title="Klik untuk ubah / nonaktifkan"
-              className={`text-left bg-white rounded-2xl border shadow-soft p-5 hover:border-blue-400 hover:shadow transition-all ${!k.is_aktif ? 'opacity-60' : ''}`}>
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-gray-800">{k.nama}</p>
-                <div className="flex items-center gap-1">
-                  {!k.is_aktif && <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">nonaktif</span>}
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 capitalize">{k.tipe}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+        {kas.map(k => (
+          <button key={k.id} onClick={() => openEdit(k)} title="Klik untuk ubah / nonaktifkan"
+            className={`text-left card p-5 hover:border-brand-300 hover:shadow-soft transition-all ${!k.is_aktif ? 'opacity-50 grayscale' : ''}`}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="font-bold text-gray-900 text-lg">{k.nama}</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="badge badge-gray capitalize">{k.tipe}</span>
+                  {!k.is_aktif && <span className="badge badge-red">nonaktif</span>}
                 </div>
               </div>
-              <p className="text-2xl font-bold text-blue-700 mt-2">{formatRupiah(k.saldo_saat_ini)}</p>
-              {k.nomor_rekening && <p className="text-xs text-gray-400 mt-1">No. {k.nomor_rekening}</p>}
-              <p className="text-[11px] text-gray-300 mt-2">✎ ubah</p>
-            </button>
-          ))}
-        </div>
+              <div className="p-2 bg-gray-50 rounded-xl text-gray-400 group-hover:text-brand-600 transition-colors">
+                <Edit2 className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-2xl font-extrabold text-brand-600 tracking-tight">{formatRupiah(k.saldo_saat_ini)}</p>
+            {k.nomor_rekening && <p className="text-sm font-medium text-gray-500 mt-2">No. {k.nomor_rekening}</p>}
+          </button>
+        ))}
+      </div>
 
-        {/* COA */}
-        <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
-          <div className="px-5 py-3 border-b bg-gray-50"><h2 className="font-semibold text-gray-700">Bagan Akun (Chart of Accounts)</h2></div>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>{['Kode', 'Nama Akun', 'Tipe', 'Saldo Normal'].map(h => <th key={h} className="text-left px-5 py-2.5 font-semibold text-gray-500 text-xs">{h}</th>)}</tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? <tr><td colSpan={4} className="text-center py-8 text-gray-400">Memuat...</td></tr> :
-                akun.map(a => (
-                  <tr key={a.id} className={a.is_header ? 'bg-gray-50 font-semibold' : 'hover:bg-gray-50'}>
-                    <td className="px-5 py-2.5 font-mono text-blue-700">{a.kode_akun}</td>
-                    <td className="px-5 py-2.5">{a.nama_akun}</td>
-                    <td className="px-5 py-2.5"><span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${TIPE_BADGE[a.tipe]}`}>{a.tipe}</span></td>
-                    <td className="px-5 py-2.5 capitalize text-gray-500">{a.saldo_normal}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+      <div className="card overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+          <h2 className="font-bold text-gray-900">Bagan Akun (Chart of Accounts)</h2>
         </div>
+        <table className="w-full text-sm">
+          <thead className="tbl-head">
+            <tr>{['Kode', 'Nama Akun', 'Tipe', 'Saldo Normal'].map(h => (
+              <th key={h} className="tbl-th">{h}</th>
+            ))}</tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={4} className="py-16 text-center text-gray-400 text-sm">Memuat...</td></tr>
+            ) : akun.map(a => (
+              <tr key={a.id} className={`tbl-row ${a.is_header ? 'bg-gray-50/80 font-bold' : 'hover:bg-gray-50'}`}>
+                <td className={`tbl-td font-mono ${a.is_header ? 'text-gray-900' : 'text-brand-700'}`}>{a.kode_akun}</td>
+                <td className={`tbl-td ${a.is_header ? 'text-gray-900' : 'text-gray-700'}`}>{a.nama_akun}</td>
+                <td className="tbl-td"><span className={TIPE_BADGE[a.tipe] ?? 'badge badge-gray'}>{a.tipe}</span></td>
+                <td className="tbl-td capitalize text-gray-500 font-medium">{a.saldo_normal}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Modal tambah kas */}
-        {showAdd && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setShowAdd(false)}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-4">Tambah Jenis Kas Baru</h3>
-              <div className="space-y-3">
-                <input placeholder="Nama kas (mis. Kas Pembangunan)" value={form.nama} onChange={e => setForm({ ...form, nama: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-                <select value={form.tipe} onChange={e => setForm({ ...form, tipe: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
+      {showAdd && (
+        <div className="modal-overlay" onClick={() => setShowAdd(false)}>
+          <div className="modal-box max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="font-bold text-lg text-gray-900">Tambah Jenis Kas Baru</h3>
+            </div>
+            <div className="modal-body space-y-4">
+              <div className="space-y-1.5">
+                <label className="form-label">Nama Kas</label>
+                <input placeholder="mis. Kas Pembangunan" value={form.nama} onChange={e => setForm({ ...form, nama: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Tipe</label>
+                <select value={form.tipe} onChange={e => setForm({ ...form, tipe: e.target.value })} className="form-input">
                   <option value="tunai">Tunai</option><option value="bank">Bank</option><option value="digital">Digital</option>
                 </select>
-                <input type="number" placeholder="Saldo awal" value={form.saldo_awal} onChange={e => setForm({ ...form, saldo_awal: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-                <input placeholder="Penanggung jawab (Nama MH, opsional)" value={form.penanggung_jawab} onChange={e => setForm({ ...form, penanggung_jawab: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-                <input placeholder="Nomor rekening (opsional)" value={form.nomor_rekening} onChange={e => setForm({ ...form, nomor_rekening: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-                <select value={form.akun_id} onChange={e => setForm({ ...form, akun_id: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
-                  <option value="">— Akun COA terkait (Aset) —</option>
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Saldo Awal</label>
+                <input type="number" placeholder="0" value={form.saldo_awal} onChange={e => setForm({ ...form, saldo_awal: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Penanggung Jawab</label>
+                <input placeholder="opsional" value={form.penanggung_jawab} onChange={e => setForm({ ...form, penanggung_jawab: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Nomor Rekening</label>
+                <input placeholder="opsional" value={form.nomor_rekening} onChange={e => setForm({ ...form, nomor_rekening: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Akun COA (Aset)</label>
+                <select value={form.akun_id} onChange={e => setForm({ ...form, akun_id: e.target.value })} className="form-input">
+                  <option value="">— pilih akun —</option>
                   {asetAkun.map(a => <option key={a.id} value={a.id}>{a.kode_akun} · {a.nama_akun}</option>)}
                 </select>
               </div>
-              <div className="flex gap-2 mt-5">
-                <button onClick={() => setShowAdd(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={addKas} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
-              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShowAdd(false)} className="btn-secondary flex-1 justify-center">Batal</button>
+              <button onClick={addKas} disabled={saving} className="btn-primary flex-1 justify-center">{saving ? 'Menyimpan…' : 'Simpan'}</button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal ubah / nonaktifkan kas */}
-        {edit && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setEdit(null)}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-4">Ubah Kas — {edit.nama}</h3>
-              <div className="space-y-3">
-                <input placeholder="Nama kas" value={editForm.nama} onChange={e => setEditForm({ ...editForm, nama: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-                <select value={editForm.tipe} onChange={e => setEditForm({ ...editForm, tipe: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
+      {edit && (
+        <div className="modal-overlay" onClick={() => setEdit(null)}>
+          <div className="modal-box max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="font-bold text-lg text-gray-900">Ubah Kas</h3>
+              <p className="text-sm text-gray-400 mt-1">{edit.nama}</p>
+            </div>
+            <div className="modal-body space-y-4">
+              <div className="space-y-1.5">
+                <label className="form-label">Nama Kas</label>
+                <input value={editForm.nama} onChange={e => setEditForm({ ...editForm, nama: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Tipe</label>
+                <select value={editForm.tipe} onChange={e => setEditForm({ ...editForm, tipe: e.target.value })} className="form-input">
                   <option value="tunai">Tunai</option><option value="bank">Bank</option><option value="digital">Digital</option>
                 </select>
-                <input placeholder="Penanggung jawab (Nama MH, opsional)" value={editForm.penanggung_jawab} onChange={e => setEditForm({ ...editForm, penanggung_jawab: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-                <input placeholder="Nomor rekening (opsional)" value={editForm.nomor_rekening} onChange={e => setEditForm({ ...editForm, nomor_rekening: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
-                <label className="text-sm text-gray-600 block">Saldo awal (Rp)
-                  <input type="number" value={editForm.saldo_awal} onChange={e => setEditForm({ ...editForm, saldo_awal: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" />
-                  <span className="text-[11px] text-gray-400">Mengubah saldo awal otomatis menggeser saldo saat ini & Neraca.</span>
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Penanggung Jawab</label>
+                <input placeholder="opsional" value={editForm.penanggung_jawab} onChange={e => setEditForm({ ...editForm, penanggung_jawab: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Nomor Rekening</label>
+                <input placeholder="opsional" value={editForm.nomor_rekening} onChange={e => setEditForm({ ...editForm, nomor_rekening: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label flex justify-between">
+                  <span>Saldo Awal (Rp)</span>
+                  <span className="text-[10px] text-brand-600 font-normal">Geser saldo & Neraca otomatis</span>
                 </label>
-                <select value={editForm.akun_id} onChange={e => setEditForm({ ...editForm, akun_id: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
-                  <option value="">— Akun COA terkait (Aset) —</option>
+                <input type="number" value={editForm.saldo_awal} onChange={e => setEditForm({ ...editForm, saldo_awal: e.target.value })} className="form-input" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Akun COA (Aset)</label>
+                <select value={editForm.akun_id} onChange={e => setEditForm({ ...editForm, akun_id: e.target.value })} className="form-input">
+                  <option value="">— pilih akun —</option>
                   {asetAkun.map(a => <option key={a.id} value={a.id}>{a.kode_akun} · {a.nama_akun}</option>)}
                 </select>
-                <label className="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" checked={editForm.is_aktif} onChange={e => setEditForm({ ...editForm, is_aktif: e.target.checked })} /> Kas aktif (hilangkan centang untuk menonaktifkan)</label>
               </div>
-              <div className="flex gap-2 mt-5">
-                {isSuper && <button onClick={delKas} disabled={saving} className="border border-red-300 text-red-600 rounded-xl px-4 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-60">🗑 Hapus</button>}
-                <button onClick={() => setEdit(null)} className="flex-1 border rounded-xl py-2 text-sm font-medium">{isSuper ? 'Batal' : 'Tutup'}</button>
-                {isSuper && <button onClick={saveEdit} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan perubahan'}</button>}
+              <div className="pt-2">
+                <label className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={editForm.is_aktif} onChange={e => setEditForm({ ...editForm, is_aktif: e.target.checked })} className="accent-brand-600 w-4 h-4 rounded" />
+                  Kas Aktif
+                </label>
               </div>
-              {isSuper && <p className="text-[11px] text-gray-400 mt-2">Hapus hanya untuk Super Admin & kas tanpa transaksi. Untuk kas berisi data, gunakan nonaktifkan.</p>}
+            </div>
+            <div className="modal-footer">
+              {isSuper && <button onClick={delKas} disabled={saving} className="btn-danger">🗑 Hapus</button>}
+              <button onClick={() => setEdit(null)} className="btn-secondary flex-1 justify-center">{isSuper ? 'Batal' : 'Tutup'}</button>
+              {isSuper && <button onClick={saveEdit} disabled={saving} className="btn-primary flex-1 justify-center">{saving ? 'Menyimpan…' : 'Simpan'}</button>}
             </div>
           </div>
-        )}
+        </div>
+      )}
     </main>
   )
 }

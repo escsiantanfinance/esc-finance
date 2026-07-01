@@ -47,13 +47,18 @@ class _HomeShellState extends State<HomeShell> {
     ];
 
     // Cek batas index jika laporan hilang saat _index = 3
-    if (_index >= pages.length) _index = pages.length - 1;
+    int currentIndex = _index;
+    if (currentIndex >= pages.length) {
+      currentIndex = pages.length - 1;
+    }
 
     return Scaffold(
-      body: IndexedStack(index: _index, children: pages),
+      body: IndexedStack(index: currentIndex, children: pages),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        selectedIndex: currentIndex,
+        onDestinationSelected: (i) {
+          if (_index != i) setState(() => _index = i);
+        },
         destinations: destinations,
       ),
     );

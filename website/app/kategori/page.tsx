@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase, type KategoriPersembahan, type Kas, type Akun } from '@/lib/supabase'
 import { RowAction } from '@/components/RowAction'
 import toast from 'react-hot-toast'
+import { Plus } from 'lucide-react'
 
 const emptyForm = {
   nama: '', kas_id: '', akun_pendapatan_id: '',
@@ -81,7 +82,7 @@ export default function KategoriPersembahanPage() {
     setSaving(false)
     if (error) {
       toast.error(/foreign key|violates|constraint/i.test(error.message)
-        ? 'Kategori ini sudah dipakai di persembahan, jadi tidak bisa dihapus. Nonaktifkan saja (hilangkan centang "Aktif").'
+        ? 'Kategori ini sudah dipakai di persembahan, tidak bisa dihapus. Nonaktifkan saja.'
         : 'Gagal menghapus: ' + error.message)
       return
     }
@@ -91,84 +92,103 @@ export default function KategoriPersembahanPage() {
 
   if (allowed === null) return <main className="flex-1 p-8 text-gray-400">Memuat…</main>
   if (!allowed) return (
-    <main className="flex-1 p-8"><div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 max-w-lg">
-      <h1 className="font-bold text-lg text-amber-800">🔒 Akses dibatasi</h1>
-      <p className="text-amber-700 text-sm mt-1">Kategori persembahan hanya bisa diatur Super Admin.</p>
-    </div></main>
+    <main className="flex-1 p-6 lg:p-8">
+      <div className="card p-6 max-w-lg border-amber-200 bg-amber-50">
+        <h1 className="font-bold text-lg text-amber-800">🔒 Akses dibatasi</h1>
+        <p className="text-amber-700 text-sm mt-1">Kategori persembahan hanya bisa diatur Super Admin.</p>
+      </div>
+    </main>
   )
 
   return (
-    <main className="flex-1 p-8">
-      <div className="mb-6 flex items-center justify-between">
+    <main className="flex-1 p-6 lg:p-8">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Kategori Persembahan</h1>
-          <p className="text-gray-500 mt-1">Jenis persembahan yang muncul di aplikasi bendahara — tiap kategori menuju satu kas</p>
+          <h1 className="page-title">Kategori Persembahan</h1>
+          <p className="page-subtitle">Jenis persembahan yang muncul di aplikasi bendahara</p>
         </div>
-        <button onClick={openAdd} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">+ Tambah Kategori</button>
+        <button onClick={openAdd} className="btn-primary">
+          <Plus className="w-4 h-4" /> Tambah Kategori
+        </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
+      <div className="card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>{['#', 'Nama', 'Kas tujuan', 'Daftar nama', 'Perpuluhan', 'Status', ''].map(h => <th key={h} className="text-left px-5 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
+          <thead className="tbl-head">
+            <tr>{['#', 'Nama', 'Kas Tujuan', 'Daftar Nama', 'Perpuluhan', 'Status', ''].map(h => (
+              <th key={h} className="tbl-th">{h}</th>
+            ))}</tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {loading ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">Memuat…</td></tr> :
-              list.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">Belum ada kategori</td></tr> :
-              list.map(k => (
-                <tr key={k.id} className={`hover:bg-gray-50 ${!k.is_aktif ? 'opacity-50' : ''}`}>
-                  <td className="px-5 py-3 text-gray-400">{k.urutan}</td>
-                  <td className="px-5 py-3 font-medium">{k.nama}</td>
-                  <td className="px-5 py-3 text-gray-500">{k.kas?.nama ?? <span className="text-amber-600">belum diatur</span>}</td>
-                  <td className="px-5 py-3">{k.butuh_nama ? <span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">ya</span> : <span className="text-gray-300 text-xs">tidak</span>}</td>
-                  <td className="px-5 py-3">{k.is_perpuluhan ? <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">ya</span> : <span className="text-gray-300 text-xs">—</span>}</td>
-                  <td className="px-5 py-3">{k.is_aktif ? <span className="text-xs text-green-600">aktif</span> : <span className="text-xs text-red-500">nonaktif</span>}</td>
-                  <td className="px-5 py-3 text-right"><RowAction onClick={() => openEdit(k)}>Ubah</RowAction></td>
-                </tr>
-              ))}
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} className="py-16 text-center text-gray-400 text-sm">Memuat…</td></tr>
+            ) : list.length === 0 ? (
+              <tr><td colSpan={7} className="py-16 text-center text-gray-400 text-sm">Belum ada kategori</td></tr>
+            ) : list.map(k => (
+              <tr key={k.id} className={`tbl-row ${!k.is_aktif ? 'opacity-50' : ''}`}>
+                <td className="tbl-td text-gray-400 w-10">{k.urutan}</td>
+                <td className="tbl-td font-semibold text-gray-800">{k.nama}</td>
+                <td className="tbl-td text-gray-500">{k.kas?.nama ?? <span className="text-amber-600 text-xs">belum diatur</span>}</td>
+                <td className="tbl-td">{k.butuh_nama ? <span className="badge badge-blue">ya</span> : <span className="text-gray-300 text-xs">—</span>}</td>
+                <td className="tbl-td">{k.is_perpuluhan ? <span className="badge badge-green">ya</span> : <span className="text-gray-300 text-xs">—</span>}</td>
+                <td className="tbl-td">{k.is_aktif ? <span className="badge badge-green">Aktif</span> : <span className="badge badge-red">Nonaktif</span>}</td>
+                <td className="tbl-td text-right"><RowAction onClick={() => openEdit(k)}>Ubah</RowAction></td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       {show && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setShow(false)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg mb-4">{edit ? 'Ubah Kategori' : 'Tambah Kategori'}</h3>
-            <div className="space-y-3">
-              <label className="text-sm block">Nama kategori
-                <input value={form.nama} onChange={e => setForm({ ...form, nama: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="mis. Pembangunan Gedung" />
-              </label>
-              <label className="text-sm block">Kas tujuan
-                <select value={form.kas_id} onChange={e => setForm({ ...form, kas_id: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+        <div className="modal-overlay" onClick={() => setShow(false)}>
+          <div className="modal-box max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="font-bold text-lg text-gray-900">{edit ? 'Ubah Kategori' : 'Tambah Kategori'}</h3>
+            </div>
+            <div className="modal-body space-y-4">
+              <div className="space-y-1.5">
+                <label className="form-label">Nama Kategori</label>
+                <input value={form.nama} onChange={e => setForm({ ...form, nama: e.target.value })} className="form-input" placeholder="mis. Pembangunan Gedung" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Kas Tujuan</label>
+                <select value={form.kas_id} onChange={e => setForm({ ...form, kas_id: e.target.value })} className="form-input">
                   <option value="">— pilih kas —</option>
                   {kas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
                 </select>
-              </label>
-              <label className="text-sm block">Akun pendapatan (untuk jurnal)
-                <select value={form.akun_pendapatan_id} onChange={e => setForm({ ...form, akun_pendapatan_id: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+              </div>
+              <div className="space-y-1.5">
+                <label className="form-label">Akun Pendapatan (untuk jurnal)</label>
+                <select value={form.akun_pendapatan_id} onChange={e => setForm({ ...form, akun_pendapatan_id: e.target.value })} className="form-input">
                   <option value="">— pilih akun —</option>
                   {akun.map(a => <option key={a.id} value={a.id}>{a.kode_akun} · {a.nama_akun}</option>)}
                 </select>
-              </label>
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <label className="text-sm">Urutan
-                  <input type="number" value={form.urutan} onChange={e => setForm({ ...form, urutan: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" />
+                <div className="space-y-1.5">
+                  <label className="form-label">Urutan</label>
+                  <input type="number" value={form.urutan} onChange={e => setForm({ ...form, urutan: e.target.value })} className="form-input" />
+                </div>
+                <div className="flex items-center gap-2 pt-6">
+                  <input type="checkbox" id="is_aktif" checked={form.is_aktif} onChange={e => setForm({ ...form, is_aktif: e.target.checked })} className="accent-brand-600" />
+                  <label htmlFor="is_aktif" className="text-sm font-medium text-gray-700">Aktif</label>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                <label className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={form.butuh_nama} onChange={e => setForm({ ...form, butuh_nama: e.target.checked })} className="accent-brand-600" />
+                  Kumpulkan daftar nama pemberi
                 </label>
-                <label className="flex items-center gap-2 text-sm pt-6">
-                  <input type="checkbox" checked={form.is_aktif} onChange={e => setForm({ ...form, is_aktif: e.target.checked })} /> Aktif
+                <label className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={form.is_perpuluhan} onChange={e => setForm({ ...form, is_perpuluhan: e.target.checked })} className="accent-brand-600" />
+                  Dihitung sebagai perpuluhan
                 </label>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={form.butuh_nama} onChange={e => setForm({ ...form, butuh_nama: e.target.checked })} /> Kumpulkan daftar nama pemberi
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={form.is_perpuluhan} onChange={e => setForm({ ...form, is_perpuluhan: e.target.checked })} /> Dihitung sebagai perpuluhan (untuk laporan status)
-              </label>
             </div>
-            <div className="flex gap-2 mt-5">
-              {edit && <button onClick={del} disabled={saving} className="border border-red-300 text-red-600 rounded-xl px-4 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-60">🗑 Hapus</button>}
-              <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-              <button onClick={save} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
+            <div className="modal-footer">
+              {edit && <button onClick={del} disabled={saving} className="btn-danger">🗑 Hapus</button>}
+              <button onClick={() => setShow(false)} className="btn-secondary flex-1 justify-center">Batal</button>
+              <button onClick={save} disabled={saving} className="btn-primary flex-1 justify-center">{saving ? 'Menyimpan…' : 'Simpan'}</button>
             </div>
           </div>
         </div>

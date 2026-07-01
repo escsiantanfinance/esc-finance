@@ -3,13 +3,14 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase, formatRupiah, formatTanggal, type Pengeluaran } from '@/lib/supabase'
 import { exportToExcel } from '@/lib/export-excel'
-import { RowAction, RowActions } from '@/components/RowAction'
+import { RowAction } from '@/components/RowAction'
 import ScopeBanner from '@/components/ScopeBanner'
+import { Plus, Download } from 'lucide-react'
 
-const statusStyle: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  disetujui: 'bg-green-100 text-green-700',
-  ditolak: 'bg-red-100 text-red-700',
+const statusBadge: Record<string, string> = {
+  pending:   'badge badge-yellow',
+  disetujui: 'badge badge-green',
+  ditolak:   'badge badge-red',
 }
 
 const emptyForm = {
@@ -126,124 +127,149 @@ export default function PengeluaranPage() {
   }
 
   return (
-    <main className="flex-1 p-8">
-        <ScopeBanner />
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Pengeluaran</h1>
-            <div className="flex gap-2 mt-4 flex-wrap">
-              {['semua', 'pending', 'disetujui', 'ditolak'].map(s => (
-                <button key={s} onClick={() => setFilter(s)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all capitalize
-                    ${filter === s ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}`}>
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={handleExport} className="border border-gray-300 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">⬇ Export Excel</button>
-            <button onClick={() => { setForm({ ...emptyForm }); setFile(null); setMsg(''); setShow(true) }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-sm font-semibold">+ Tambah Pengeluaran</button>
+    <main className="flex-1 p-6 lg:p-8">
+      <ScopeBanner />
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Pengeluaran</h1>
+          <p className="page-subtitle">Daftar & persetujuan pengeluaran kas</p>
+          <div className="flex gap-1.5 flex-wrap mt-3">
+            {['semua', 'pending', 'disetujui', 'ditolak'].map(s => (
+              <button key={s} onClick={() => setFilter(s)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all capitalize
+                  ${filter === s ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-500 hover:border-brand-300 hover:text-brand-600'}`}>
+                {s}
+              </button>
+            ))}
           </div>
         </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={handleExport} className="btn-secondary">
+            <Download className="w-4 h-4" /> Export
+          </button>
+          <button onClick={() => { setForm({ ...emptyForm }); setFile(null); setMsg(''); setShow(true) }} className="btn-primary">
+            <Plus className="w-4 h-4" /> Tambah Pengeluaran
+          </button>
+        </div>
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                {['Tanggal', 'Keterangan', 'Kategori', 'Kas', 'Jumlah', 'Bukti', 'Status', 'Aksi'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="p-4">
-                    <div className="space-y-4">
-                      {[...Array(4)].map((_, i) => <div key={i} className="h-4 bg-gray-200 rounded animate-pulse" />)}
+      <div className="card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="tbl-head">
+            <tr>
+              {['Tanggal', 'Keterangan', 'Kategori', 'Kas', 'Jumlah', 'Bukti', 'Status', 'Aksi'].map(h => (
+                <th key={h} className="tbl-th">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={8} className="px-5 py-8">
+                <div className="space-y-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="h-4 bg-brand-50 rounded-full w-24 animate-pulse" />
+                      <div className="h-4 bg-brand-50 rounded-full flex-1 animate-pulse" />
+                      <div className="h-4 bg-brand-50 rounded-full w-20 animate-pulse" />
                     </div>
-                  </td>
-                </tr>
-              ) : data.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Belum ada pengeluaran</td></tr>
-              ) : data.map(row => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
-                  <td className="px-4 py-3 max-w-[200px] truncate">{row.keterangan}</td>
-                  <td className="px-4 py-3 text-gray-500">{row.kategori?.nama ?? '-'}</td>
-                  <td className="px-4 py-3 text-gray-500">{row.kas?.nama ?? '-'}</td>
-                  <td className="px-4 py-3 font-semibold text-red-600">{formatRupiah(row.jumlah)}</td>
-                  <td className="px-4 py-3">{(row as any).bukti_url ? <a href={(row as any).bukti_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-xs">📎 Lihat</a> : <span className="text-gray-300 text-xs">-</span>}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyle[row.status]}`}>{row.status}</span>
-                  </td>
-                  <td className="px-4 py-3">
+                  ))}
+                </div>
+              </td></tr>
+            ) : data.length === 0 ? (
+              <tr><td colSpan={8} className="py-16 text-center text-gray-400 text-sm">Belum ada pengeluaran</td></tr>
+            ) : data.map(row => (
+              <tr key={row.id} className="tbl-row">
+                <td className="tbl-td whitespace-nowrap">{formatTanggal(row.tanggal)}</td>
+                <td className="tbl-td max-w-[200px] truncate font-medium text-gray-800">{row.keterangan}</td>
+                <td className="tbl-td text-gray-500">{row.kategori?.nama ?? '-'}</td>
+                <td className="tbl-td text-gray-500">{row.kas?.nama ?? '-'}</td>
+                <td className="tbl-td font-bold text-rose-600">{formatRupiah(row.jumlah)}</td>
+                <td className="tbl-td">
+                  {(row as any).bukti_url
+                    ? <a href={(row as any).bukti_url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline text-xs font-medium">📎 Lihat</a>
+                    : <span className="text-gray-300 text-xs">—</span>}
+                </td>
+                <td className="tbl-td">
+                  <span className={statusBadge[row.status]}>{row.status}</span>
+                </td>
+                <td className="tbl-td">
+                  <div className="flex items-center gap-1.5">
                     {row.status === 'pending' && (
-                      <RowActions>
+                      <>
                         <RowAction variant="success" onClick={() => approve(row.id)}>✓ Setujui</RowAction>
                         <RowAction variant="danger" onClick={() => reject(row.id)}>✗ Tolak</RowAction>
-                      </RowActions>
+                      </>
                     )}
                     {row.status === 'disetujui' && (
-                      <RowActions>
-                        <RowAction variant="danger" onClick={() => cancelApprove(row.id)}>Batalkan</RowAction>
-                      </RowActions>
+                      <RowAction variant="danger" onClick={() => cancelApprove(row.id)}>Batalkan</RowAction>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        {show && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setShow(false)}>
-            <div className="bg-white rounded-2xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
-              <h3 className="font-bold text-lg mb-4">Tambah Pengeluaran</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="text-sm">Tanggal
-                  <input type="date" value={form.tanggal} onChange={e => setForm({ ...form, tanggal: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" />
-                </label>
-                <label className="text-sm">Metode
-                  <select value={form.metode_pembayaran} onChange={e => setForm({ ...form, metode_pembayaran: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+      {show && (
+        <div className="modal-overlay" onClick={() => setShow(false)}>
+          <div className="modal-box max-w-lg" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="font-bold text-lg text-gray-900">Tambah Pengeluaran</h3>
+              <p className="text-sm text-gray-400 mt-1">Pengeluaran masuk sebagai <b>pending</b> — perlu disetujui agar memengaruhi saldo.</p>
+            </div>
+            <div className="modal-body">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="form-label">Tanggal</label>
+                  <input type="date" value={form.tanggal} onChange={e => setForm({ ...form, tanggal: e.target.value })} className="form-input" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="form-label">Metode</label>
+                  <select value={form.metode_pembayaran} onChange={e => setForm({ ...form, metode_pembayaran: e.target.value })} className="form-input">
                     <option value="tunai">Tunai</option><option value="transfer">Transfer</option><option value="digital">Digital</option>
                   </select>
-                </label>
-                <label className="text-sm">Kategori
-                  <select value={form.kategori_id} onChange={e => setForm({ ...form, kategori_id: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+                </div>
+                <div className="space-y-1.5">
+                  <label className="form-label">Kategori</label>
+                  <select value={form.kategori_id} onChange={e => setForm({ ...form, kategori_id: e.target.value })} className="form-input">
                     <option value="">— pilih —</option>
                     {kategori.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
                   </select>
-                </label>
-                <label className="text-sm">Kas asal
-                  <select value={form.kas_id} onChange={e => setForm({ ...form, kas_id: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+                </div>
+                <div className="space-y-1.5">
+                  <label className="form-label">Kas Asal</label>
+                  <select value={form.kas_id} onChange={e => setForm({ ...form, kas_id: e.target.value })} className="form-input">
                     <option value="">— pilih —</option>
                     {kas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
                   </select>
-                </label>
-                <label className="text-sm col-span-2">Jumlah (Rp)
-                  <input type="number" value={form.jumlah} onChange={e => setForm({ ...form, jumlah: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="0" />
-                </label>
-                <label className="text-sm col-span-2">Keterangan
-                  <input value={form.keterangan} onChange={e => setForm({ ...form, keterangan: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="mis. Bayar listrik bulan Juni" />
-                </label>
-                <label className="text-sm">Penerima
-                  <input value={form.penerima} onChange={e => setForm({ ...form, penerima: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="opsional" />
-                </label>
-                <label className="text-sm">Bukti nota (opsional)
-                  <input type="file" accept="image/*,.pdf" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-xs mt-2" />
-                </label>
+                </div>
+                <div className="col-span-2 space-y-1.5">
+                  <label className="form-label">Jumlah (Rp)</label>
+                  <input type="number" value={form.jumlah} onChange={e => setForm({ ...form, jumlah: e.target.value })} className="form-input" placeholder="0" />
+                </div>
+                <div className="col-span-2 space-y-1.5">
+                  <label className="form-label">Keterangan</label>
+                  <input value={form.keterangan} onChange={e => setForm({ ...form, keterangan: e.target.value })} className="form-input" placeholder="mis. Bayar listrik bulan Juni" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="form-label">Penerima</label>
+                  <input value={form.penerima} onChange={e => setForm({ ...form, penerima: e.target.value })} className="form-input" placeholder="opsional" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="form-label">Bukti Nota (opsional)</label>
+                  <input type="file" accept="image/*,.pdf" onChange={e => setFile(e.target.files?.[0] ?? null)} className="form-input text-xs py-2" />
+                </div>
               </div>
-              {msg && <p className="text-xs mt-3 text-amber-700 bg-amber-50 rounded-lg px-3 py-2">{msg}</p>}
-              <div className="flex gap-2 mt-5">
-                <button onClick={() => setShow(false)} className="flex-1 border rounded-xl py-2 text-sm font-medium">Batal</button>
-                <button onClick={submit} disabled={saving} className="flex-1 bg-blue-600 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan (status: pending)'}</button>
-              </div>
-              <p className="text-[11px] text-gray-400 mt-2">Pengeluaran masuk sebagai <b>pending</b> → perlu disetujui agar memengaruhi saldo kas & jurnal.</p>
+              {msg && <p className="text-xs mt-4 text-amber-700 bg-amber-50 rounded-xl px-3 py-2.5">{msg}</p>}
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShow(false)} className="btn-secondary flex-1 justify-center">Batal</button>
+              <button onClick={submit} disabled={saving} className="btn-primary flex-1 justify-center">{saving ? 'Menyimpan…' : 'Simpan'}</button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </main>
   )
 }

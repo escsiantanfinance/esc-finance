@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { Church, ShieldCheck, TrendingUp, Lock } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,9 +21,9 @@ export default function LoginPage() {
     if (error) {
       const msg = error.message || ''
       if (/fetch|network|Failed to fetch|ENOTFOUND/i.test(msg)) {
-        setError('Tidak bisa terhubung ke server Supabase. Cek NEXT_PUBLIC_SUPABASE_URL di .env.local (jangan placeholder), lalu restart server.')
+        setError('Tidak bisa terhubung ke server. Periksa koneksi internet Anda.')
       } else if (/not confirmed/i.test(msg)) {
-        setError('Email belum dikonfirmasi. Di Supabase → Authentication → Users, aktifkan/konfirmasi user (Auto Confirm).')
+        setError('Email belum dikonfirmasi. Hubungi administrator.')
       } else if (/invalid login/i.test(msg)) {
         setError('Email atau kata sandi salah.')
       } else {
@@ -35,43 +36,98 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="flex w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Panel kiri */}
-        <div className="hidden md:flex flex-col justify-center w-2/5 bg-blue-800 text-white p-10">
-          <div className="text-5xl">⛪</div>
-          <h1 className="text-2xl font-bold mt-4 leading-tight">ESC Finance</h1>
-          <p className="text-blue-200 text-sm mt-2">Sistem Akuntansi &amp; Bendahara Gereja Terintegrasi</p>
-          <ul className="text-blue-100 text-sm mt-8 space-y-2">
-            <li>✓ Rekonsiliasi kas otomatis</li>
-            <li>✓ Laporan keuangan standar</li>
-            <li>✓ Aman &amp; tercadangkan harian</li>
-          </ul>
+    <div className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #fdf4ff 100%)' }}>
+
+      {/* Decorative blobs */}
+      <div className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-20 blur-3xl -translate-x-1/2 -translate-y-1/2"
+        style={{ background: 'radial-gradient(circle, #6366f1, transparent)' }} />
+      <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-15 blur-3xl translate-x-1/2 translate-y-1/2"
+        style={{ background: 'radial-gradient(circle, #7c3aed, transparent)' }} />
+
+      <div className="relative w-full max-w-4xl flex bg-white rounded-3xl overflow-hidden"
+        style={{ boxShadow: '0 32px 80px rgba(79,70,229,0.18)' }}>
+
+        {/* Left panel */}
+        <div className="hidden md:flex flex-col justify-between w-5/12 p-10 text-white relative overflow-hidden"
+          style={{ background: 'linear-gradient(160deg, #1e1b4b 0%, #4f46e5 55%, #7c3aed 100%)' }}>
+          {/* Decorative circle */}
+          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-10"
+            style={{ background: 'radial-gradient(circle, white, transparent)' }} />
+          <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full opacity-10"
+            style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
+
+          <div className="relative z-10">
+            <div className="grid place-items-center w-14 h-14 rounded-2xl mb-6"
+              style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)' }}>
+              <Church className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-3xl font-extrabold leading-tight mb-2">ESC Finance</h1>
+            <p className="text-indigo-200 text-sm">Sistem Akuntansi & Bendahara Gereja Terintegrasi</p>
+          </div>
+
+          <div className="relative z-10 space-y-4">
+            {[
+              { icon: TrendingUp, text: 'Rekonsiliasi kas otomatis' },
+              { icon: ShieldCheck, text: 'Laporan keuangan standar gereja' },
+              { icon: Lock, text: 'Data aman & tercadangkan harian' },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-3">
+                <div className="grid place-items-center w-7 h-7 rounded-lg shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.15)' }}>
+                  <Icon className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="text-sm text-indigo-100">{text}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        {/* Form */}
-        <div className="flex-1 p-10">
-          <h2 className="text-xl font-bold text-gray-900">Masuk ke akun Anda</h2>
-          <p className="text-gray-500 text-sm mt-1 mb-6">Khusus pengurus &amp; bendahara gereja</p>
-          <form onSubmit={handleLogin} className="space-y-4">
+
+        {/* Right panel — form */}
+        <div className="flex-1 p-10 flex flex-col justify-center">
+          <div className="md:hidden grid place-items-center w-12 h-12 rounded-2xl mb-6 mx-auto"
+            style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}>
+            <Church className="w-6 h-6 text-white" />
+          </div>
+          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Masuk ke akun Anda</h2>
+          <p className="text-gray-400 text-sm mt-1 mb-8">Khusus pengurus &amp; bendahara gereja</p>
+
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="text-sm font-medium text-gray-700">Email</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+              <label className="form-label">Email</label>
+              <input
+                type="email" required value={email}
+                onChange={e => setEmail(e.target.value)}
                 placeholder="bendahara@gereja.id"
-                className="mt-1 w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="form-input"
+              />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Kata sandi</label>
-              <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
+              <label className="form-label">Kata Sandi</label>
+              <input
+                type="password" required value={password}
+                onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="mt-1 w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="form-input"
+              />
             </div>
-            {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
-            <button type="submit" disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl py-3 transition-colors">
-              {loading ? 'Memproses…' : 'Masuk'}
+            {error && (
+              <div className="flex items-start gap-2.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                <span className="shrink-0 mt-0.5">⚠</span>
+                <span>{error}</span>
+              </div>
+            )}
+            <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3 text-base">
+              {loading ? (
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Memproses…</span>
+              ) : 'Masuk'}
             </button>
           </form>
-          <p className="text-center text-gray-400 text-xs mt-6">🔒 Koneksi aman terenkripsi</p>
+
+          <div className="flex items-center gap-2 justify-center mt-8 text-xs text-gray-400">
+            <Lock className="w-3 h-3" />
+            <span>Koneksi aman terenkripsi dengan SSL</span>
+          </div>
         </div>
       </div>
     </div>
