@@ -45,31 +45,38 @@ export default function Sidebar() {
   const [isSuper, setIsSuper] = useState(false)
   const [name, setName] = useState('')
 
+  const [allowedPages, setAllowedPages] = useState<string[] | null>(null)
+
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, role, is_super_admin')
+        .select('full_name, role, is_super_admin, allowed_pages')
         .eq('id', user.id)
         .single()
       if (data) {
         setRole(data.role)
         setIsSuper(data.is_super_admin)
         setName(data.full_name)
+        if (data.allowed_pages && Array.isArray(data.allowed_pages) && data.allowed_pages.length > 0) {
+          setAllowedPages(data.allowed_pages)
+        }
       }
     }
     loadProfile()
   }, [])
 
   const isStaff = role === 'admin' || role === 'bendahara'
-  function canSee(vis: Visibility) {
+  function canSee(vis: Visibility, href: string) {
+    if (isSuper) return true // Super Admin selalu bisa melihat semua menu
+    if (allowedPages) return allowedPages.includes(href)
     if (vis === 'all') return true
     if (vis === 'staff') return isStaff
     if (vis === 'admin') return role === 'admin'
-    if (vis === 'super') return isSuper
-    if (vis === 'oversight') return role !== 'bendahara' // laporan resmi seluruh-gereja: bukan ranah bendahara
+    if (vis === 'super') return false // sudah di-handle isSuper
+    if (vis === 'oversight') return role !== 'bendahara'
     return false
   }
 
@@ -95,7 +102,7 @@ export default function Sidebar() {
 
       <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
         {navGroups.map(group => {
-          const visible = group.items.filter(i => canSee(i.vis))
+          const visible = group.items.filter(i => canSee(i.vis, i.href))
           if (visible.length === 0) return null
           return (
             <div key={group.title}>

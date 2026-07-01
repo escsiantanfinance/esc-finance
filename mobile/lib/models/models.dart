@@ -21,12 +21,14 @@ class Profile {
   final String role;
   final bool isSuperAdmin;
   final bool bolehApprovePengeluaran;
+  final List<String> allowedPages;
   Profile({
     required this.id,
     required this.fullName,
     required this.role,
     this.isSuperAdmin = false,
     this.bolehApprovePengeluaran = false,
+    this.allowedPages = const [],
   });
   bool get isFullAccess => role == 'admin' || isSuperAdmin;
   factory Profile.fromMap(Map<String, dynamic> m) => Profile(
@@ -35,6 +37,7 @@ class Profile {
         role: m['role'] ?? 'majelis',
         isSuperAdmin: m['is_super_admin'] ?? false,
         bolehApprovePengeluaran: m['boleh_approve_pengeluaran'] ?? false,
+        allowedPages: List<String>.from(m['allowed_pages'] ?? []),
       );
 }
 

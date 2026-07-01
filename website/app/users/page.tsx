@@ -10,6 +10,22 @@ const ROLE_BADGE: Record<string, string> = {
 const EDITABLE_ROLES = ['bendahara', 'majelis', 'volunteer']
 const emptyForm = { email: '', password: '', full_name: '', role: 'bendahara' }
 
+const ALL_PAGES = [
+  { path: '/dashboard', label: 'Dashboard' },
+  { path: '/sesi-ibadah', label: 'Sesi Ibadah' },
+  { path: '/persembahan', label: 'Persembahan' },
+  { path: '/pengeluaran', label: 'Pengeluaran' },
+  { path: '/anggaran', label: 'Anggaran' },
+  { path: '/perpuluhan', label: 'Perpuluhan' },
+  { path: '/akun', label: 'Akun & Kas' },
+  { path: '/analitik-kas', label: 'Analitik Kas' },
+  { path: '/jurnal', label: 'Jurnal Umum' },
+  { path: '/laporan', label: 'Laporan' },
+  { path: '/kategori', label: 'Kategori Persembahan' },
+  { path: '/users', label: 'Kelola Pengguna' },
+  { path: '/backup', label: 'Backup' },
+]
+
 export default function UsersPage() {
   const [allowed, setAllowed] = useState<boolean | null>(null)
   const [isSuper, setIsSuper] = useState(false)
@@ -23,6 +39,7 @@ export default function UsersPage() {
   const [accessUser, setAccessUser] = useState<any | null>(null)
   const [allKas, setAllKas] = useState<any[]>([])
   const [userKasIds, setUserKasIds] = useState<Set<string>>(new Set())
+  const [pageAccessUser, setPageAccessUser] = useState<any | null>(null)
 
   async function load() {
     const res = await fetch('/api/users')
@@ -55,7 +72,7 @@ export default function UsersPage() {
     setShow(false); setForm({ ...emptyForm }); setMsg('✓ Akun dibuat'); load()
   }
 
-  async function patchUser(id: string, patch: { role?: string; boleh_approve_pengeluaran?: boolean }) {
+  async function patchUser(id: string, patch: { role?: string; boleh_approve_pengeluaran?: boolean; allowed_pages?: string[] | null }) {
     setUsers(us => us.map(u => u.id === id ? { ...u, ...patch } : u)) // optimistic
     const res = await fetch('/api/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, ...patch }) })
     if (!res.ok) { const j = await res.json(); setMsg('✗ ' + j.error); load() }
@@ -84,6 +101,17 @@ export default function UsersPage() {
     setUserKasIds(next)
   }
 
+  function openPageAccess(u: any) {
+    setPageAccessUser(u)
+  }
+
+  function togglePage(u: any, path: string) {
+    const current = new Set(u.allowed_pages ?? [])
+    if (current.has(path)) current.delete(path)
+    else current.add(path)
+    patchUser(u.id, { allowed_pages: Array.from(current) })
+  }
+
   if (allowed === null) return <main className="flex-1 p-8 text-gray-400">Memuat…</main>
   if (!allowed) return (
     <main className="flex-1 p-8"><div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 max-w-lg">
@@ -106,7 +134,7 @@ export default function UsersPage() {
 
       <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b"><tr>{['Email', 'Nama', 'Role', 'Izin approve', 'Akses kas', 'Login terakhir', 'Aksi'].map(h => <th key={h} className="text-left px-5 py-3 font-semibold text-gray-600">{h}</th>)}</tr></thead>
+          <thead className="bg-gray-50 border-b"><tr>{['Email', 'Nama', 'Role', 'Izin approve', 'Akses (Kas & Halaman)', 'Login terakhir', 'Aksi'].map(h => <th key={h} className="text-left px-5 py-3 font-semibold text-gray-600">{h}</th>)}</tr></thead>
           <tbody className="divide-y divide-gray-100">
             {users.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">Memuat / belum ada pengguna</td></tr> :
               users.map(u => {
@@ -134,9 +162,13 @@ export default function UsersPage() {
                       )}
                     </td>
                     <td className="px-5 py-3">
-                      {isProtected ? <span className="text-xs text-gray-400">semua kas</span> :
-                        isSuper ? <RowAction onClick={() => openAccess(u)}>Atur akses…</RowAction>
-                        : <span className="text-xs text-gray-300">—</span>}
+                      {isProtected ? <span className="text-xs text-gray-400">semua akses</span> :
+                        isSuper ? (
+                          <div className="flex gap-1.5 flex-col items-start">
+                            <RowAction onClick={() => openAccess(u)}>Atur Kas…</RowAction>
+                            <RowAction onClick={() => openPageAccess(u)}>Atur Halaman…</RowAction>
+                          </div>
+                        ) : <span className="text-xs text-gray-300">—</span>}
                     </td>
                     <td className="px-5 py-3 text-gray-500">{u.last_sign_in_at ? formatTanggal(u.last_sign_in_at) : 'belum pernah'}</td>
                     <td className="px-5 py-3">
@@ -197,6 +229,28 @@ export default function UsersPage() {
               {allKas.length === 0 && <p className="text-gray-400 text-sm">Belum ada kas aktif.</p>}
             </div>
             <button onClick={() => setAccessUser(null)} className="w-full mt-5 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold">Selesai</button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal akses halaman */}
+      {pageAccessUser && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setPageAccessUser(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-1">Akses Halaman — {pageAccessUser.full_name ?? pageAccessUser.email}</h3>
+            <p className="text-xs text-gray-500 mb-4">Pilih halaman mana yang bisa dilihat di menu sidebar (centang). Jika Anda mengosongkan semua, sistem akan kembali menggunakan aturan default berdasarkan role.</p>
+            <div className="space-y-1.5 max-h-72 overflow-y-auto">
+              {ALL_PAGES.map(p => {
+                const checked = (pageAccessUser.allowed_pages ?? []).includes(p.path)
+                return (
+                  <label key={p.path} className="flex items-center gap-2.5 text-sm px-3 py-2 rounded-xl hover:bg-gray-50 cursor-pointer">
+                    <input type="checkbox" checked={checked} onChange={() => togglePage(pageAccessUser, p.path)} />
+                    <span className="font-medium">{p.label} <span className="text-xs text-gray-400 font-normal">({p.path})</span></span>
+                  </label>
+                )
+              })}
+            </div>
+            <button onClick={() => setPageAccessUser(null)} className="w-full mt-5 bg-blue-700 text-white rounded-xl py-2 text-sm font-semibold">Selesai</button>
           </div>
         </div>
       )}

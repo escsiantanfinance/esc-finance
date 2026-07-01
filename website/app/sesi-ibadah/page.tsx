@@ -13,11 +13,17 @@ const STATUS_BADGE: Record<string, { c: string; t: string }> = {
 export default function SesiIbadahPage() {
   const [data, setData] = useState<SesiIbadah[]>([])
   const [loading, setLoading] = useState(true)
+  const [role, setRole] = useState<string>('')
 
   async function load() {
     const { data: rows } = await supabase.from('sesi_ibadah')
       .select('*, kas:kas_id(nama)').order('tanggal', { ascending: false }).limit(50)
     if (rows) setData(rows as any)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: p } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (p) setRole(p.role)
+    }
     setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -64,7 +70,7 @@ export default function SesiIbadahPage() {
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         <RowActions>
                           <RowAction href={`/sesi-ibadah/${s.id}`}>Lihat</RowAction>
-                          {s.status !== 'signed_locked' && (
+                          {s.status !== 'signed_locked' && role !== 'bendahara' && (
                             <RowAction variant="danger" onClick={() => delSesi(s)}>Hapus</RowAction>
                           )}
                         </RowActions>
