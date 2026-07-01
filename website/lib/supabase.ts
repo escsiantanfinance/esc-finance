@@ -1,10 +1,12 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
 // Browser client (cookie-based session, dipakai di Client Components)
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+// Fallback placeholder mencegah crash saat build-time prerender Vercel (env vars belum ada).
+// Di runtime browser, nilai NEXT_PUBLIC_* yang asli selalu tersedia.
+export const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL     ?? 'https://placeholder.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+)
 
 // ============================================================
 // TYPES
