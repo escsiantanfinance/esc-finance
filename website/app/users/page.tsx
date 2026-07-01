@@ -43,6 +43,10 @@ export default function UsersPage() {
   const [kasSaving, setKasSaving] = useState(false)
   const [kasMsg, setKasMsg] = useState('')
   const [pageAccessUser, setPageAccessUser] = useState<any | null>(null)
+  
+  // Ganti Password state
+  const [resetPwdUser, setResetPwdUser] = useState<any | null>(null)
+  const [newPassword, setNewPassword] = useState('')
 
   async function load() {
     const res = await fetch('/api/users')
@@ -133,6 +137,27 @@ export default function UsersPage() {
     patchUser(u.id, { allowed_pages: Array.from(current) })
   }
 
+  async function changePassword() {
+    if (!resetPwdUser || !newPassword || newPassword.length < 6) {
+      setMsg('Kata sandi minimal 6 karakter.')
+      return
+    }
+    setSaving(true); setMsg('')
+    const res = await fetch('/api/users', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: resetPwdUser.id, password: newPassword }),
+    })
+    const j = await res.json()
+    setSaving(false)
+    if (!res.ok) setMsg('✗ ' + j.error)
+    else {
+      setMsg('✓ Kata sandi berhasil diubah!')
+      setResetPwdUser(null)
+      setNewPassword('')
+    }
+  }
+
   if (allowed === null) return <main className="flex-1 p-8 text-gray-400">Memuat…</main>
   if (!allowed) return (
     <main className="flex-1 p-8"><div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 max-w-lg">
@@ -153,7 +178,7 @@ export default function UsersPage() {
 
       {msg && <div className="mb-4 text-sm bg-white border rounded-xl px-4 py-2.5">{msg}</div>}
 
-      <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b"><tr>{['Email', 'Nama', 'Role', 'Izin approve', 'Akses (Kas & Halaman)', 'Login terakhir', 'Aksi'].map(h => <th key={h} className="text-left px-5 py-3 font-semibold text-gray-600">{h}</th>)}</tr></thead>
           <tbody className="divide-y divide-gray-100">
@@ -193,9 +218,14 @@ export default function UsersPage() {
                     </td>
                     <td className="px-5 py-3 text-gray-500">{u.last_sign_in_at ? formatTanggal(u.last_sign_in_at) : 'belum pernah'}</td>
                     <td className="px-5 py-3">
-                      {isProtected
-                        ? <span className="text-xs text-gray-300">terlindungi</span>
-                        : <RowAction variant="danger" onClick={() => delUser(u.id, u.email)}>Hapus</RowAction>}
+                      {isProtected ? (
+                        <span className="text-xs text-gray-300">terlindungi</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          {isSuper && <RowAction onClick={() => setResetPwdUser(u)}>Ganti Sandi</RowAction>}
+                          <RowAction variant="danger" onClick={() => delUser(u.id, u.email)}>Hapus</RowAction>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 )
@@ -233,10 +263,25 @@ export default function UsersPage() {
         </div>
       )}
 
+      {/* Modal ganti password */}
+      {resetPwdUser && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setResetPwdUser(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-soft" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-2">Ganti Kata Sandi</h3>
+            <p className="text-sm text-gray-500 mb-4">Reset sandi untuk <strong>{resetPwdUser.full_name || resetPwdUser.email}</strong>.</p>
+            <input type="text" placeholder="Sandi baru (min 6)" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full border rounded-xl px-3 py-2 text-sm mb-4" />
+            <div className="flex gap-2">
+              <button onClick={() => setResetPwdUser(null)} className="flex-1 py-2 text-sm font-medium border rounded-xl hover:bg-gray-50">Batal</button>
+              <button onClick={changePassword} disabled={saving} className="flex-1 py-2 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60">{saving ? 'Menyimpan…' : 'Simpan'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal akses kas */}
       {accessUser && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={() => setAccessUser(null)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-soft" onClick={e => e.stopPropagation()}>
             <h3 className="font-bold text-lg mb-1">Akses Kas — {accessUser.full_name ?? accessUser.email}</h3>
             <p className="text-xs text-gray-500 mb-4">Centang kas yang boleh diakses bendahara ini di aplikasi mobile.</p>
             <div className="space-y-1.5 max-h-72 overflow-y-auto">

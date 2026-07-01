@@ -48,8 +48,8 @@ function findHeaderRow(rows: any[][]) {
 }
 
 export default function ImportModal({
-  tahun, bulan, onClose, onImported,
-}: { tahun: number; bulan: number; onClose: () => void; onImported: () => void }) {
+  tahun, bulan, onClose, onImported, isSuperAdmin
+}: { tahun: number; bulan: number; onClose: () => void; onImported: () => void; isSuperAdmin: boolean }) {
   const [step, setStep] = useState<'pilih' | 'preview'>('pilih')
   const [fileName, setFileName] = useState('')
   const [rows, setRows] = useState<ParsedRow[]>([])
@@ -197,7 +197,11 @@ export default function ImportModal({
                       <td className="px-3 py-2">
                         <select value={r.anggotaId ?? ''} onChange={e => setRowAnggota(i, e.target.value)} className="border rounded-lg px-2 py-1 text-xs w-full max-w-[220px]">
                           <option value="">— tidak ditemukan —</option>
-                          {anggotaList.map(a => <option key={a.id} value={a.id}>{a.nama}{a.kontak ? ` (${a.kontak})` : ''}</option>)}
+                          {anggotaList.map(a => (
+                            <option key={a.id} value={a.id}>
+                              {a.nama}{a.kontak ? ` (${a.kontak})` : ''}{isSuperAdmin ? ` - ${a.is_volunteer ? 'Volunteer' : 'Jemaat'}` : ''}
+                            </option>
+                          ))}
                         </select>
                         {!r.anggotaId && (
                           <button onClick={() => buatAnggotaBaru(i)} className="block text-[11px] text-blue-700 hover:underline mt-1">+ Buat anggota baru</button>

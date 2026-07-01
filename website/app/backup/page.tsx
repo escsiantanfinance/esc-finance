@@ -12,6 +12,14 @@ export default function BackupPage() {
   const [msg, setMsg] = useState('')
   const [preview, setPreview] = useState<Record<string, number> | null>(null)
   const [file, setFile] = useState<File | null>(null)
+  const [dbSize, setDbSize] = useState<{ usedMb: number, limitMb: number, percent: number } | null>(null)
+
+  async function loadStorage() {
+    const res = await fetch('/api/db-size')
+    if (res.ok) {
+      setDbSize(await res.json())
+    }
+  }
 
   async function loadLogs() {
     const { data } = await supabase.from('log_backup').select('*').order('created_at', { ascending: false }).limit(30)
@@ -24,7 +32,10 @@ export default function BackupPage() {
       if (!user) { setAllowed(false); return }
       const { data: p } = await supabase.from('profiles').select('is_super_admin').eq('id', user.id).single()
       setAllowed(!!p?.is_super_admin)
-      if (p?.is_super_admin) loadLogs()
+      if (p?.is_super_admin) {
+        loadLogs()
+        loadStorage()
+      }
     }
     init()
   }, [])
@@ -62,14 +73,30 @@ export default function BackupPage() {
 
   return (
     <main className="flex-1 p-8">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Backup &amp; Recovery</h1>
-            <p className="text-gray-500 mt-1">Pencadangan otomatis harian &amp; pemulihan data</p>
+            <p className="text-gray-500 mt-1 mb-4">Pencadangan dan pemulihan data Excel otomatis.</p>
+            <button onClick={triggerBackup} disabled={busy} className="bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">
+              {busy ? 'Memproses…' : '🔄 Picu pencadangan sekarang'}
+            </button>
           </div>
-          <button onClick={triggerBackup} disabled={busy} className="bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white rounded-xl px-4 py-2.5 text-sm font-semibold">
-            {busy ? 'Memproses…' : '🔄 Picu pencadangan sekarang'}
-          </button>
+          
+          {dbSize && (
+            <div className="bg-white border rounded-2xl p-4 w-72 shadow-sm">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-sm font-semibold text-gray-700">Kapasitas Database</span>
+                <span className="text-xs text-gray-500">{dbSize.usedMb.toFixed(1)} / {dbSize.limitMb} MB</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                <div 
+                  className={`h-2.5 rounded-full ${dbSize.percent > 85 ? 'bg-red-500' : dbSize.percent > 60 ? 'bg-amber-500' : 'bg-blue-600'}`} 
+                  style={{ width: `${Math.max(1, dbSize.percent)}%` }}
+                ></div>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1.5 text-right">{dbSize.percent.toFixed(1)}% terpakai</p>
+            </div>
+          )}
         </div>
 
         {msg && <div className="mb-4 text-sm bg-white border rounded-xl px-4 py-2.5">{msg}</div>}

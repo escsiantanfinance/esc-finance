@@ -17,9 +17,17 @@ export default function PerpuluhanPage() {
   const [show, setShow] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [form, setForm] = useState({ nama: '', kontak: '', divisi_pelayanan: '', is_volunteer: true })
+  const [roleFilter, setRoleFilter] = useState<'semua' | 'volunteer' | 'jemaat'>('semua')
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   async function load() {
     setLoading(true)
+    const { data: u } = await supabase.auth.getUser()
+    if (u?.user) {
+      const { data: p } = await supabase.from('profiles').select('is_super_admin').eq('id', u.user.id).single()
+      if (p) setIsSuperAdmin(!!p.is_super_admin)
+    }
+    
     const { data } = await supabase.from('v_status_perpuluhan')
       .select('*').eq('tahun', tahun).eq('bulan', bulan).order('nama')
     setRows(data ?? [])
@@ -28,7 +36,11 @@ export default function PerpuluhanPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [tahun, bulan])
 
-  const filtered = rows.filter(r => filter === 'semua' || (filter === 'sudah' ? r.sudah_mengembalikan : !r.sudah_mengembalikan))
+  const filtered = rows.filter(r => {
+    const s = filter === 'semua' || (filter === 'sudah' ? r.sudah_mengembalikan : !r.sudah_mengembalikan)
+    const rl = !isSuperAdmin || roleFilter === 'semua' || (roleFilter === 'volunteer' ? r.is_volunteer : !r.is_volunteer)
+    return s && rl
+  })
   const sudahCount = rows.filter(r => r.sudah_mengembalikan).length
   const pct = rows.length ? Math.round((sudahCount / rows.length) * 100) : 0
 
@@ -82,6 +94,15 @@ export default function PerpuluhanPage() {
             <button key={f} onClick={() => setFilter(f)} className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize ${filter === f ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>{f}</button>
           ))}
         </div>
+        
+        {isSuperAdmin && (
+          <div className="flex gap-2 mb-4">
+            <span className="text-sm text-gray-500 py-1.5 mr-2">Filter Peran:</span>
+            {(['semua', 'volunteer', 'jemaat'] as const).map(f => (
+              <button key={f} onClick={() => setRoleFilter(f)} className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize ${roleFilter === f ? 'bg-indigo-600 text-white' : 'bg-white border text-gray-600'}`}>{f}</button>
+            ))}
+          </div>
+        )}
 
         <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
           <table className="w-full text-sm">
@@ -125,7 +146,7 @@ export default function PerpuluhanPage() {
         )}
 
         {showImport && (
-          <ImportModal tahun={tahun} bulan={bulan} onClose={() => setShowImport(false)} onImported={load} />
+          <ImportModal tahun={tahun} bulan={bulan} onClose={() => setShowImport(false)} onImported={load} isSuperAdmin={isSuperAdmin} />
         )}
     </main>
   )

@@ -40,7 +40,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Keluar',
-            onPressed: () => context.read<AuthProvider>().logout(),
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Konfirmasi'),
+                  content: const Text('Apakah Anda yakin ingin keluar?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Keluar')),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                if (context.mounted) context.read<AuthProvider>().logout();
+              }
+            },
           ),
         ],
       ),

@@ -137,7 +137,11 @@ export default function Sidebar() {
           </div>
         </div>
         <button
-          onClick={logout}
+          onClick={() => {
+            if (window.confirm('Apakah Anda yakin ingin keluar?')) {
+              logout()
+            }
+          }}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-red-600/90 hover:text-white transition-colors"
         >
           <span className="text-base w-5 text-center">🚪</span> Keluar

@@ -103,6 +103,13 @@ export default function PengeluaranPage() {
     load()
   }
 
+  async function cancelApprove(id: string) {
+    if (!confirm('Batalkan persetujuan pengeluaran ini dan kembalikan ke status pending?')) return
+    const { error } = await supabase.from('pengeluaran').update({ status: 'pending', disetujui_oleh: null }).eq('id', id)
+    if (error) alert('Gagal: ' + error.message)
+    else load()
+  }
+
   function handleExport() {
     exportToExcel(
       data.map(r => ({
@@ -176,6 +183,11 @@ export default function PengeluaranPage() {
                       <RowActions>
                         <RowAction variant="success" onClick={() => approve(row.id)}>✓ Setujui</RowAction>
                         <RowAction variant="danger" onClick={() => reject(row.id)}>✗ Tolak</RowAction>
+                      </RowActions>
+                    )}
+                    {row.status === 'disetujui' && (
+                      <RowActions>
+                        <RowAction variant="danger" onClick={() => cancelApprove(row.id)}>Batalkan</RowAction>
                       </RowActions>
                     )}
                   </td>
