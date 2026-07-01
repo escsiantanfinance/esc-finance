@@ -27,6 +27,8 @@ body { background: #f1f5f9; color: #0f172a; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* Kartu & elemen umum sedikit lebih halus */
+.shadow-soft { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fadein { animation: none; }
   html { scroll-behavior: auto; }

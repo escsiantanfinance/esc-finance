@@ -4,6 +4,8 @@ import 'package:signature/signature.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/sesi_draft_provider.dart';
+import '../../utils/currency_formatter.dart';
+import '../widgets/stepper_header.dart';
 
 class BalancingSignatureScreen extends StatefulWidget {
   const BalancingSignatureScreen({super.key});
@@ -88,61 +90,68 @@ class _BalancingSignatureScreenState extends State<BalancingSignatureScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Balancing & Tanda Tangan')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Column(
         children: [
-          // Indikator MATCH / MISMATCH
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: (match ? AppColors.success : AppColors.danger).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
+          const StepperHeader(step: 4),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                Text(match ? '✓ MATCH' : '✗ MISMATCH',
-                    style: TextStyle(color: match ? AppColors.success : AppColors.danger, fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 6),
-                Text(
-                  'Fisik ${formatRupiah(draft.totalFisik)} · Kategori ${formatRupiah(draft.totalKategori)} · Keluar ${formatRupiah(draft.totalPengeluaran)}',
-                  style: TextStyle(color: AppColors.muted, fontSize: 13),
-                  textAlign: TextAlign.center,
+                // Indikator MATCH / MISMATCH
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: (match ? AppColors.success : AppColors.danger).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(match ? '✓ MATCH' : '✗ MISMATCH',
+                          style: TextStyle(color: match ? AppColors.success : AppColors.danger, fontSize: 22, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Fisik ${formatRupiah(draft.totalFisik)} · Kategori ${formatRupiah(draft.totalKategori)} · Keluar ${formatRupiah(draft.totalPengeluaran)}',
+                        style: TextStyle(color: AppColors.muted, fontSize: 13),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text('Selisih ${formatRupiah(draft.selisih)}',
+                          style: TextStyle(color: match ? AppColors.success : AppColors.danger, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
                 ),
-                Text('Selisih ${formatRupiah(draft.selisih)}',
-                    style: TextStyle(color: match ? AppColors.success : AppColors.danger, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 16),
+                if (!match)
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(12)),
+                    child: const Text(
+                      'Total fisik dan (kategori − pengeluaran) belum sama. Kembali perbaiki denominasi, kategori, atau pengeluaran sebelum menandatangani.',
+                      style: TextStyle(color: Color(0xFF92400E), fontSize: 13),
+                    ),
+                  )
+                else ...[
+                  _sigBlock('Tanda tangan Penghitung 1', _p1Name, _p1Sig),
+                  const SizedBox(height: 18),
+                  _sigBlock('Tanda tangan Penghitung 2', _p2Name, _p2Sig),
+                  const SizedBox(height: 18),
+                  _sigBlock('Tanda tangan Bendahara', _bendaharaName, _bendaharaSig),
+                  const SizedBox(height: 18),
+                  _sigBlock('Tanda tangan Gembala', _gembalaName, _gembalaSig),
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+                      onPressed: _saving ? null : () => _simpanKunci(draft),
+                      icon: const Icon(Icons.lock),
+                      label: Text(_saving ? 'Menyimpan…' : 'Simpan & kunci'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          if (!match)
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(12)),
-              child: const Text(
-                'Total fisik dan (kategori − pengeluaran) belum sama. Kembali perbaiki denominasi, kategori, atau kartu biru sebelum menandatangani.',
-                style: TextStyle(color: Color(0xFF92400E), fontSize: 13),
-              ),
-            )
-          else ...[
-            _sigBlock('Tanda tangan Penghitung 1', _p1Name, _p1Sig),
-            const SizedBox(height: 18),
-            _sigBlock('Tanda tangan Penghitung 2', _p2Name, _p2Sig),
-            const SizedBox(height: 18),
-            _sigBlock('Tanda tangan Bendahara', _bendaharaName, _bendaharaSig),
-            const SizedBox(height: 18),
-            _sigBlock('Tanda tangan Gembala', _gembalaName, _gembalaSig),
-            const SizedBox(height: 22),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
-                onPressed: _saving ? null : () => _simpanKunci(draft),
-                icon: const Icon(Icons.lock),
-                label: Text(_saving ? 'Menyimpan…' : 'Simpan & kunci'),
-              ),
-            ),
-          ],
         ],
       ),
     );

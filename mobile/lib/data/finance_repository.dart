@@ -6,6 +6,7 @@ import '../models/models.dart';
 /// Akses data ke Supabase (mirror logika web).
 class FinanceRepository {
   final _db = SupabaseService.client;
+  SupabaseClient get client => _db;
 
   // ---------- AUTH ----------
   Future<void> login(String email, String password) async {

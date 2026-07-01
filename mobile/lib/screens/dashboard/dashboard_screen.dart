@@ -5,7 +5,9 @@ import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/finance_provider.dart';
 import '../offering/buka_sesi_screen.dart';
-
+import '../offering/sesi_ibadah_screen.dart';
+import '../expense/pengeluaran_screen.dart';
+import '../report/laporan_screen.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
   @override
@@ -17,7 +19,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FinanceProvider>().loadDashboard();
+      final fullAccess = context.read<AuthProvider>().profile?.isFullAccess ?? false;
+      context.read<FinanceProvider>().loadDashboard(fullAccess);
       context.read<FinanceProvider>().ensureKasKategori();
     });
   }
@@ -42,7 +45,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => context.read<FinanceProvider>().loadDashboard(),
+        onRefresh: () async {
+          final fullAccess = context.read<AuthProvider>().profile?.isFullAccess ?? false;
+          await context.read<FinanceProvider>().loadDashboard(fullAccess);
+        },
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -128,9 +134,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () => Navigator.push(context,
                       MaterialPageRoute(builder: (_) => const BukaSesiScreen())),
                 ),
-                _ActionCard(icon: '🧾', label: 'Pengeluaran', onTap: () {}),
-                _ActionCard(icon: '📊', label: 'Laporan', onTap: () {}),
-                _ActionCard(icon: '💳', label: 'Saldo kas', onTap: () {}),
+                _ActionCard(
+                  icon: '🧾',
+                  label: 'Pengeluaran',
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const PengeluaranScreen())),
+                ),
+                _ActionCard(
+                  icon: '📊',
+                  label: 'Laporan',
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const LaporanScreen())), 
+                ),
+                _ActionCard(
+                  icon: '💳',
+                  label: 'Sesi Ibadah', // Ganti Saldo Kas jadi Sesi Ibadah
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const SesiIbadahScreen())), 
+                ),
               ],
             ),
           ],

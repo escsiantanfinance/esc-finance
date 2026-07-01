@@ -15,12 +15,46 @@ class FinanceProvider extends ChangeNotifier {
   List<Anggaran> anggaran = [];
   bool busy = false;
 
-  Future<void> loadDashboard() async {
+  Future<void> loadDashboard(bool fullAccess) async {
     _setBusy(true);
     try {
-      summary = await repo.getDashboardSummary();
+      final summaryGlobal = await repo.getDashboardSummary();
       kasAksesIds = await repo.getKasAksesIds();
       kas = await repo.getKasList();
+      
+      if (fullAccess) {
+        summary = summaryGlobal;
+      } else {
+        // Bendahara: hitung pemasukan/pengeluaran bulan ini sesuai kas yang bisa diakses (di-filter RLS Supabase)
+        final now = DateTime.now();
+        final startOfMonth = "${now.year}-${now.month.toString().padLeft(2, '0')}-01";
+        
+        double pMasuk = 0;
+        try {
+          final res = await repo.client.from('persembahan').select('jumlah').gte('tanggal', startOfMonth);
+          for (var r in (res as List)) pMasuk += (r['jumlah'] as num).toDouble();
+        } catch (_) {}
+
+        double pKeluar = 0;
+        try {
+          final res = await repo.client.from('pengeluaran').select('jumlah').gte('tanggal', startOfMonth).eq('status', 'disetujui');
+          for (var r in (res as List)) pKeluar += (r['jumlah'] as num).toDouble();
+        } catch (_) {}
+
+        double saldo = 0;
+        for (var k in kas.where((k) => kasAksesIds.contains(k.id))) {
+          saldo += k.saldoSaatIni;
+        }
+
+        summary = DashboardSummary(
+          pemasukanBulanIni: pMasuk,
+          pengeluaranBulanIni: pKeluar,
+          pemasukanTahunIni: summaryGlobal.pemasukanTahunIni,
+          pengeluaranTahunIni: summaryGlobal.pengeluaranTahunIni,
+          pengeluaranPending: summaryGlobal.pengeluaranPending,
+          totalSaldo: saldo,
+        );
+      }
     } catch (_) {}
     _setBusy(false);
   }

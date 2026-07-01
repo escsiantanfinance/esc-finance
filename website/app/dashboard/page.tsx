@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import StatsCard from '@/components/StatsCard'
 import { supabase, formatRupiah, type DashboardSummary, type Pengeluaran } from '@/lib/supabase'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
@@ -23,6 +23,7 @@ export default function DashboardPage() {
       if (chart) setChartData(chart.map((r: any) => ({
         bulan: new Date(r.bulan).toLocaleString('id-ID', { month: 'short' }),
         pemasukan: r.total_persembahan,
+        pengeluaran: r.total_pengeluaran,
       })))
       setLoading(false)
     }
@@ -37,9 +38,18 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-28 bg-gray-200 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="h-72 bg-gray-200 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          </>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
@@ -61,7 +71,9 @@ export default function DashboardPage() {
                     <XAxis dataKey="bulan" />
                     <YAxis tickFormatter={(v) => `${(v/1000000).toFixed(0)}jt`} />
                     <Tooltip formatter={(v: number) => formatRupiah(v)} />
+                    <Legend />
                     <Bar dataKey="pemasukan" fill="#1E40AF" radius={[6,6,0,0]} />
+                    <Bar dataKey="pengeluaran" fill="#EF4444" radius={[6,6,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/finance_provider.dart';
 import '../../providers/sesi_draft_provider.dart';
 import 'kalkulator_denominasi_screen.dart';
+import 'stepper_header.dart';
 
 class InputKategoriScreen extends StatefulWidget {
   const InputKategoriScreen({super.key});
@@ -33,28 +34,42 @@ class _InputKategoriScreenState extends State<InputKategoriScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Input Kategori')),
       bottomNavigationBar: _bottomBar(context, draft),
-      body: daftarKategori.isEmpty
-          ? Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Text(
-                  fin.kategoriPersembahan.isEmpty
-                      ? 'Belum ada kategori persembahan. Hubungi Super Admin untuk menambahkannya di web.'
-                      : 'Anda belum diberi akses kas untuk kategori manapun. Hubungi Super Admin.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.muted),
-                ),
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text('Pilih kategori yang dihitung pada sesi ini, lalu isi jumlahnya.',
-                    style: TextStyle(color: AppColors.muted, fontSize: 13)),
-                const SizedBox(height: 12),
-                ...daftarKategori.map((k) => _kategoriCard(draft, k)),
-              ],
-            ),
+      body: Column(
+        children: [
+          const StepperHeader(step: 1),
+          Expanded(
+            child: daftarKategori.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.folder_open, size: 64, color: AppColors.muted),
+                          const SizedBox(height: 16),
+                          Text(
+                            fin.kategoriPersembahan.isEmpty
+                                ? 'Belum ada kategori persembahan. Hubungi Super Admin untuk menambahkannya di web.'
+                                : 'Anda belum diberi akses kas untuk kategori manapun. Hubungi Super Admin.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: AppColors.muted, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Text('Pilih kategori yang dihitung pada sesi ini, lalu isi jumlahnya.',
+                          style: TextStyle(color: AppColors.muted, fontSize: 13)),
+                      const SizedBox(height: 12),
+                      ...daftarKategori.map((k) => _kategoriCard(draft, k)),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 

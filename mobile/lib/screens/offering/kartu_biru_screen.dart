@@ -4,8 +4,13 @@ import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/finance_provider.dart';
+import '../../models/models.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/finance_provider.dart';
 import '../../providers/sesi_draft_provider.dart';
 import 'balancing_signature_screen.dart';
+import 'stepper_header.dart';
+import 'stepper_header.dart';
 
 /// Pengeluaran tunai langsung dari uang yang dihitung saat sesi ("Kartu Biru"
 /// di form kertas). Ikut rekonsiliasi (fisik = kategori − pengeluaran) lalu
@@ -28,23 +33,30 @@ class _KartuBiruScreenState extends State<KartuBiruScreen> {
     final kasOptions = fin.kasUntuk(fullAccess);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kartu Biru')),
+      appBar: AppBar(title: const Text('Pengeluaran')),
       bottomNavigationBar: _bottomBar(context, draft),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Column(
         children: [
-          Text(
-            'Catat pengeluaran tunai langsung dari uang yang dihitung (opsional). '
-            'Akan ditinjau Super Admin / Majelis sebelum masuk jurnal.',
-            style: TextStyle(color: AppColors.muted, fontSize: 13),
-          ),
-          const SizedBox(height: 12),
-          ...draft.pengeluaran.asMap().entries.map((e) => _pengeluaranCard(draft, fin, kasOptions, e.key, e.value)),
-          const SizedBox(height: 4),
-          OutlinedButton.icon(
-            onPressed: () => draft.addPengeluaran(),
-            icon: const Icon(Icons.add),
-            label: const Text('Tambah pengeluaran'),
+          const StepperHeader(step: 3),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text(
+                  'Catat pengeluaran tunai langsung dari uang yang dihitung (opsional). '
+                  'Akan ditinjau Super Admin / Majelis sebelum masuk jurnal.',
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                ...draft.pengeluaran.asMap().entries.map((e) => _pengeluaranCard(draft, fin, kasOptions, e.key, e.value)),
+                const SizedBox(height: 4),
+                OutlinedButton.icon(
+                  onPressed: () => draft.addPengeluaran(),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Tambah pengeluaran'),
+                ),
+              ],
+            ),
           ),
         ],
       ),

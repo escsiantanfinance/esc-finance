@@ -4,6 +4,8 @@ import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/finance_provider.dart';
 
+import '../../providers/auth_provider.dart';
+
 class LaporanScreen extends StatefulWidget {
   const LaporanScreen({super.key});
   @override
@@ -15,7 +17,8 @@ class _LaporanScreenState extends State<LaporanScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FinanceProvider>().loadDashboard();
+      final fullAccess = context.read<AuthProvider>().profile?.isFullAccess ?? false;
+      context.read<FinanceProvider>().loadDashboard(fullAccess);
     });
   }
 
@@ -27,7 +30,10 @@ class _LaporanScreenState extends State<LaporanScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Laporan')),
       body: RefreshIndicator(
-        onRefresh: () => context.read<FinanceProvider>().loadDashboard(),
+        onRefresh: () async {
+          final fullAccess = context.read<AuthProvider>().profile?.isFullAccess ?? false;
+          await context.read<FinanceProvider>().loadDashboard(fullAccess);
+        },
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [

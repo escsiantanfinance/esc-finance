@@ -58,7 +58,7 @@ export default function PersembahanPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -69,7 +69,13 @@ export default function PersembahanPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Memuat data...</td></tr>
+                <tr>
+                  <td colSpan={8} className="p-4">
+                    <div className="space-y-4">
+                      {[...Array(4)].map((_, i) => <div key={i} className="h-4 bg-gray-200 rounded animate-pulse" />)}
+                    </div>
+                  </td>
+                </tr>
               ) : data.length === 0 ? (
                 <tr><td colSpan={8} className="text-center py-8 text-gray-400">Belum ada data</td></tr>
               ) : data.map(row => (

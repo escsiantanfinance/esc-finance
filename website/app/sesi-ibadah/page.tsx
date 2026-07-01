@@ -76,13 +76,21 @@ export default function SesiIbadahPage() {
             <p className="text-gray-500 mt-1">Rekonsiliasi kas pasca-ibadah (dari aplikasi mobile)</p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>{['Tanggal', 'Jenis Ibadah', 'Kas', 'Total Fisik', 'Balancing', 'Status', ''].map(h => <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600">{h}</th>)}</tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {loading ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">Memuat...</td></tr> :
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="p-4">
+                      <div className="space-y-4">
+                        {[...Array(4)].map((_, i) => <div key={i} className="h-4 bg-gray-200 rounded animate-pulse" />)}
+                      </div>
+                    </td>
+                  </tr>
+                ) :
                   data.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">Belum ada sesi ibadah</td></tr> :
                   data.map(s => {
                     const match = Number(s.selisih) === 0
