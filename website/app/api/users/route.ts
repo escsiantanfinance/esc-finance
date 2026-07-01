@@ -5,8 +5,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Role yang boleh dibuat admin — TIDAK pernah 'admin' atau super admin.
-const ALLOWED_ROLES = ['bendahara', 'majelis', 'volunteer']
+const ALLOWED_ROLES = ['admin', 'bendahara', 'majelis', 'volunteer']
 
 async function requireAdmin() {
   const supabase = createSupabaseServer()
@@ -40,7 +39,9 @@ export async function POST(req: Request) {
   if (!email || !password || String(password).length < 6)
     return NextResponse.json({ error: 'Email & kata sandi (min. 6 karakter) wajib diisi' }, { status: 400 })
   if (!ALLOWED_ROLES.includes(role))
-    return NextResponse.json({ error: 'Role harus Bendahara, Majelis, atau Volunteer' }, { status: 400 })
+    return NextResponse.json({ error: 'Role tidak valid' }, { status: 400 })
+  if (role === 'admin' && !auth.is_super_admin)
+    return NextResponse.json({ error: 'Hanya Super Admin yang bisa membuat akun Admin' }, { status: 403 })
 
   const admin = createSupabaseAdmin()
   const { data, error } = await admin.auth.admin.createUser({

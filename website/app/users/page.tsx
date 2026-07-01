@@ -8,7 +8,7 @@ const ROLE_BADGE: Record<string, string> = {
   admin: 'bg-violet-100 text-violet-700', bendahara: 'bg-blue-100 text-blue-700',
   majelis: 'bg-slate-100 text-slate-700', volunteer: 'bg-green-100 text-green-700',
 }
-const EDITABLE_ROLES = ['bendahara', 'majelis', 'volunteer']
+const EDITABLE_ROLES = ['admin', 'bendahara', 'majelis', 'volunteer']
 const emptyForm = { email: '', password: '', full_name: '', role: 'bendahara' }
 
 const ALL_PAGES = [
@@ -180,7 +180,17 @@ export default function UsersPage() {
 
       <div className="bg-white rounded-2xl shadow-soft border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b"><tr>{['Email', 'Nama', 'Role', 'Izin approve', 'Akses (Kas & Halaman)', 'Login terakhir', 'Aksi'].map(h => <th key={h} className="text-left px-5 py-3 font-semibold text-gray-600">{h}</th>)}</tr></thead>
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="text-left px-5 py-3 font-semibold text-gray-600">Email</th>
+              <th className="text-left px-5 py-3 font-semibold text-gray-600">Nama</th>
+              <th className="text-left px-5 py-3 font-semibold text-gray-600 w-32">Role</th>
+              <th className="text-left px-5 py-3 font-semibold text-gray-600 w-28">Izin approve</th>
+              <th className="text-left px-5 py-3 font-semibold text-gray-600 w-44">Akses (Kas & Halaman)</th>
+              <th className="text-left px-5 py-3 font-semibold text-gray-600">Login terakhir</th>
+              <th className="text-left px-5 py-3 font-semibold text-gray-600 w-40">Aksi</th>
+            </tr>
+          </thead>
           <tbody className="divide-y divide-gray-100">
             {users.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-gray-400">Memuat / belum ada pengguna</td></tr> :
               users.map(u => {
@@ -193,8 +203,8 @@ export default function UsersPage() {
                       {isProtected ? (
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${ROLE_BADGE[u.role] ?? 'bg-gray-100 text-gray-600'}`}>{u.role ?? '-'}</span>
                       ) : (
-                        <select value={u.role} onChange={e => patchUser(u.id, { role: e.target.value })} className="border rounded-lg px-2 py-1 text-xs capitalize">
-                          {EDITABLE_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                        <select value={u.role} onChange={e => patchUser(u.id, { role: e.target.value })} className="border rounded-lg px-2 py-1 text-xs capitalize w-full">
+                          {EDITABLE_ROLES.filter(r => isSuper || r !== 'admin').map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                       )}
                       {u.is_super_admin && <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-violet-100 text-violet-700">super</span>}
@@ -247,9 +257,10 @@ export default function UsersPage() {
               <input type="text" placeholder="Kata sandi awal (min. 6)" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm" />
               <label className="text-sm text-gray-600 block">Role
                 <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm mt-1">
+                  {isSuper && <option value="admin">Admin</option>}
                   <option value="bendahara">Bendahara (kelola transaksi)</option>
-                  <option value="majelis">Majelis (lihat &amp; catat)</option>
-                  <option value="volunteer">Volunteer (perpuluhan)</option>
+                  <option value="majelis">Majelis (verifikator)</option>
+                  <option value="volunteer">Volunteer (pencatat lap. saja)</option>
                 </select>
                 <span className="text-[11px] text-gray-400">Tidak ada opsi Admin/Super Admin di sini — sesuai kebijakan.</span>
               </label>
