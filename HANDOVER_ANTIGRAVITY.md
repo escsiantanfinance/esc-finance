@@ -237,6 +237,8 @@ Buka Sesi
 - [x] Sidebar level akses — Laporan/Jurnal/Analitik Kas disembunyikan dari bendahara
 - [x] RLS SELECT per kas — bendahara hanya bisa baca data kasnya (di kode)
 - [x] Tombol aksi tabel konsisten (komponen RowAction)
+- [x] **Redesign UI/UX Premium** — penerapan Design System baru (bayangan lembut, kartu elegan, warna gradien, dan `Skeleton Loading` menggantikan teks 'Memuat...')
+- [x] Tampilan Modal dan Form yang lebih modern di semua halaman (Users, Kas, Pengeluaran, dll.)
 
 ### Mobile (Flutter Android) ✅
 - [x] Login / logout
@@ -251,6 +253,9 @@ Buka Sesi
 - [x] Pengeluaran (di luar sesi)
 - [x] Anggaran
 - [x] Laporan ringkasan
+- [x] **Tema Indigo Premium** — skema warna baru yang selaras dengan website
+- [x] **Redesign Dashboard** — Gradient AppBar, layout kartu informasi yang lebih bersih dan modern
+- [x] Bugfix state navigasi pada `HomeShell` untuk akun dengan akses terbatas
 
 ---
 
@@ -278,29 +283,10 @@ vercel --prod --yes --scope melvin-s-project22
 ```
 (Jalankan dari folder `website/`)
 
-#### 8.3 Push ke GitHub
-Branch `master` punya 5+ commit yang belum dipush karena credential mismatch (cached credential `escsiantanapps` vs repo owner `escsiantanfinance`). Developer baru harus:
-```bash
-git remote set-url origin https://github.com/escsiantanfinance/<nama-repo>.git
-git push origin master
-```
-
 ### PENTING — Sebaiknya Dikerjakan
 
-#### 8.4 Build Release APK
-APK debug tersedia di `mobile/build/` untuk testing. Release APK terblokir di mesin ini oleh Windows Smart App Control (memblokir `gen_snapshot.EXE`). Perlu build di mesin lain atau VM tanpa Smart App Control aktif.
-
-Perintah build:
-```powershell
-# Di PowerShell dari folder mobile/
-$env:SUPABASE_URL="https://nevczzjdvxpqiezqdhox.supabase.co"
-$env:SUPABASE_ANON_KEY="<anon-key-dari-.env.local>"
-C:\Users\N3N0C\flutter\bin\flutter build apk --release --dart-define=SUPABASE_URL=$env:SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$env:SUPABASE_ANON_KEY
-```
-
-#### 8.5 Fitur yang Belum Ada (Nice to Have)
+#### 8.3 Fitur yang Belum Ada (Nice to Have)
 - [ ] **Notifikasi push** — bendahara belum dapat notif ketika pengeluarannya disetujui/ditolak
-- [ ] **Loading skeleton** — saat ini hanya teks "Memuat..." tanpa visual yang informatif
 - [ ] **Toast/snackbar sukses** — setelah action berhasil (simpan, approve) tidak ada feedback visual
 - [ ] **Menu Jurnal Manual** di website — bendahara bisa akses form ini; mungkin perlu disembunyikan
 - [ ] **iOS support** — belum dikerjakan sama sekali; hanya Android
@@ -392,7 +378,8 @@ Karena perpuluhan adalah kewajiban spiritual jemaat, bukan urusan kas tertentu. 
 |-------|-----------------|
 | v1.0 | Mobile dasar: sesi + denominasi + kategori hardcode (ENUM) |
 | v2.0 | Web dashboard, double-entry jurnal, backup, analitik |
-| v3.0 *(saat ini)* | Multi-kas per kategori, Kartu Biru dalam sesi, 4 TTD, akses berjenjang, import perpuluhan Excel, laporan per rentang tanggal, RLS SELECT per kas |
+| v3.0 | Multi-kas per kategori, Kartu Biru dalam sesi, 4 TTD, akses berjenjang, import perpuluhan Excel, laporan per rentang tanggal, RLS SELECT per kas |
+| v3.1 *(saat ini)* | **UI/UX Premium Redesign** menyeluruh (Web & Mobile), penambahan loading skeleton, tema *Indigo Premium* pada Flutter, serta build rilis APK terbaru |
 
 ---
 
