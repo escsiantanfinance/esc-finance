@@ -1,5 +1,56 @@
 import 'package:flutter/material.dart';
 
+/// Gradient brand — dipakai splash, login, dan header dashboard
+/// supaya identitas visual konsisten dari layar pertama sampai utama.
+class AppGradients {
+  static const brand = LinearGradient(
+    colors: [Color(0xFF1E1B4B), Color(0xFF4F46E5), Color(0xFF7C3AED)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const card = LinearGradient(
+    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const cardDeep = LinearGradient(
+    colors: [Color(0xFF1E1B4B), Color(0xFF4F46E5)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+}
+
+/// Logo mark aplikasi — kotak frosted dengan ikon dompet.
+class BrandMark extends StatelessWidget {
+  final double size;
+  const BrandMark({super.key, this.size = 84});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(size * 0.29),
+        border: Border.all(color: Colors.white.withOpacity(0.22), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.18),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Icon(
+        Icons.account_balance_wallet_rounded,
+        color: Colors.white,
+        size: size * 0.48,
+      ),
+    );
+  }
+}
+
 /// Warna baru — Indigo premium, selaras dengan web.
 class AppColors {
   static const primary       = Color(0xFF4F46E5); // Indigo 600
@@ -119,6 +170,24 @@ ThemeData buildAppTheme() {
       color: Color(0xFFF3F4F6),
       thickness: 1,
       space: 1,
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: AppColors.ink,
+      contentTextStyle: const TextStyle(color: Colors.white, fontSize: 13.5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 4,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titleTextStyle: const TextStyle(
+        color: AppColors.ink,
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+      ),
+      contentTextStyle: const TextStyle(color: AppColors.muted, fontSize: 14, height: 1.5),
     ),
   );
 }
