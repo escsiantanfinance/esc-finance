@@ -26,6 +26,9 @@ build/
 *.swp
 *.swo
 
+# Claude Code (konfigurasi lokal dev)
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
