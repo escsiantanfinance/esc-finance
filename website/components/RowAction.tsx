@@ -26,4 +26,9 @@ export function RowAction({ children, onClick, variant = 'default', disabled, ti
   )
 }
 
+/** Wrapper untuk sekelompok RowAction dalam satu sel tabel */
+export function RowActions({ children }: { children: React.ReactNode }) {
+  return <div className="inline-flex items-center justify-end gap-1.5">{children}</div>
+}
+
 export default RowAction

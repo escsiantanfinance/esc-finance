@@ -150,7 +150,7 @@ export default function Sidebar() {
                         boxShadow: '0 4px 16px rgba(99,102,241,0.4)',
                       } : {}}
                     >
-                      <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? 'text-white' : 'text-indigo-300/70 group-hover:text-indigo-200'}`} strokeWidth={isActive ? 2.2 : 1.8} />
+                      <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? 'text-white' : 'text-indigo-300/70 group-hover:text-indigo-200'}`} strokeWidth={isActive ? 2.2 : 1.8} />
                       {!collapsed && <span className="truncate">{item.label}</span>}
                       {isActive && !collapsed && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/80" />}
                     </Link>

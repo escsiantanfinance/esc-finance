@@ -3,12 +3,13 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Church, ShieldCheck, TrendingUp, Lock } from 'lucide-react'
+import { Church, ShieldCheck, TrendingUp, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -45,7 +46,7 @@ export default function LoginPage() {
       <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-15 blur-3xl translate-x-1/2 translate-y-1/2"
         style={{ background: 'radial-gradient(circle, #7c3aed, transparent)' }} />
 
-      <div className="relative w-full max-w-4xl flex bg-white rounded-3xl overflow-hidden"
+      <div className="relative w-full max-w-4xl flex bg-white rounded-3xl overflow-hidden animate-slideup"
         style={{ boxShadow: '0 32px 80px rgba(79,70,229,0.18)' }}>
 
         {/* Left panel */}
@@ -94,26 +95,42 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="form-label">Email</label>
+              <label htmlFor="email" className="form-label">Email</label>
               <input
-                type="email" required value={email}
+                id="email"
+                type="email" required value={email} autoFocus
+                autoComplete="email" disabled={loading}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="bendahara@gereja.id"
-                className="form-input"
+                className="form-input disabled:opacity-60"
               />
             </div>
             <div>
-              <label className="form-label">Kata Sandi</label>
-              <input
-                type="password" required value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="form-input"
-              />
+              <label htmlFor="password" className="form-label">Kata Sandi</label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'} required value={password}
+                  autoComplete="current-password" disabled={loading}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="form-input pr-11 disabled:opacity-60"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword(s => !s)}
+                  aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
+                </button>
+              </div>
             </div>
             {error && (
-              <div className="flex items-start gap-2.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                <span className="shrink-0 mt-0.5">⚠</span>
+              <div role="alert" aria-live="polite"
+                className="flex items-start gap-2.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 animate-fadein">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}

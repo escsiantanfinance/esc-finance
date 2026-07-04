@@ -64,10 +64,10 @@ export default function StatsCard({ title, value, subtitle, trend, color = 'indi
         <div className="flex items-start justify-between mb-3">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-tight">{title}</p>
           <div className={`grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br ${c.bg}`}>
-            <Icon className="w-4.5 h-4.5 text-white" strokeWidth={2} />
+            <Icon className="w-[18px] h-[18px] text-white" strokeWidth={2} />
           </div>
         </div>
-        <p className={`text-2xl font-extrabold tracking-tight ${c.val} leading-none`}>{value}</p>
+        <p className={`text-2xl font-extrabold tracking-tight tabular-nums ${c.val} leading-none`}>{value}</p>
         {(subtitle || trend) && (
           <div className={`flex items-center gap-1 mt-2 text-xs font-medium ${c.text}`}>
             <TrendIcon trend={trend} />
