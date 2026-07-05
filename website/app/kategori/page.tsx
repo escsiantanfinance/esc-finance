@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase, type KategoriPersembahan, type Kas, type Akun } from '@/lib/supabase'
 import { RowAction } from '@/components/RowAction'
 import toast from 'react-hot-toast'
-import { Plus } from 'lucide-react'
+import { Plus, Check } from 'lucide-react'
 
 const emptyForm = {
   nama: '', kas_id: '', akun_pendapatan_id: '',
@@ -129,8 +129,8 @@ export default function KategoriPersembahanPage() {
                 <td className="tbl-td text-gray-400 w-10">{k.urutan}</td>
                 <td className="tbl-td font-semibold text-gray-800">{k.nama}</td>
                 <td className="tbl-td text-gray-500">{k.kas?.nama ?? <span className="text-amber-600 text-xs">belum diatur</span>}</td>
-                <td className="tbl-td">{k.butuh_nama ? <span className="badge badge-blue">ya</span> : <span className="text-gray-300 text-xs">—</span>}</td>
-                <td className="tbl-td">{k.is_perpuluhan ? <span className="badge badge-green">ya</span> : <span className="text-gray-300 text-xs">—</span>}</td>
+                <td className="tbl-td">{k.butuh_nama ? <span className="inline-grid place-items-center w-6 h-6 rounded-full bg-blue-100 text-blue-600"><Check className="w-3.5 h-3.5" strokeWidth={3} /></span> : <span className="text-gray-300 text-xs">—</span>}</td>
+                <td className="tbl-td">{k.is_perpuluhan ? <span className="inline-grid place-items-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600"><Check className="w-3.5 h-3.5" strokeWidth={3} /></span> : <span className="text-gray-300 text-xs">—</span>}</td>
                 <td className="tbl-td">{k.is_aktif ? <span className="badge badge-green">Aktif</span> : <span className="badge badge-red">Nonaktif</span>}</td>
                 <td className="tbl-td text-right"><RowAction onClick={() => openEdit(k)}>Ubah</RowAction></td>
               </tr>
