@@ -6,6 +6,7 @@ supabase
 .git
 .vercel
 *.md
+*.apk
 ESC_Siantan_Finance_Handover.zip
 **/node_modules
 website/.next
